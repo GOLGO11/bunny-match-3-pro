@@ -98,11 +98,12 @@ export class AudioManager {
     
     // 尝试播放音频文件（如果存在）
     // 用户可以将音频文件放在 public/sounds/rabbit-sound.mp3 或 .wav
+    const baseUrl = import.meta.env.BASE_URL || '/';
     const soundFiles = [
-      '/sounds/rabbit-sound.mp3',
-      '/sounds/rabbit-sound.wav',
-      '/sounds/match-sound.mp3',
-      '/sounds/match-sound.wav'
+      `${baseUrl}sounds/rabbit-sound.mp3`,
+      `${baseUrl}sounds/rabbit-sound.wav`,
+      `${baseUrl}sounds/match-sound.mp3`,
+      `${baseUrl}sounds/match-sound.wav`
     ];
 
     let played = false;
@@ -206,11 +207,12 @@ export class AudioManager {
     if (!this.soundEnabled) return;
 
     // 尝试播放音频文件（如果存在）
+    const baseUrl = import.meta.env.BASE_URL || '/';
     const windSoundFiles = [
-      '/sounds/wind-sound.wav',
-      '/sounds/wind.wav',
-      '/sounds/gameover-sound.wav',
-      '/sounds/end-sound.wav'
+      `${baseUrl}sounds/wind-sound.wav`,
+      `${baseUrl}sounds/wind.wav`,
+      `${baseUrl}sounds/gameover-sound.wav`,
+      `${baseUrl}sounds/end-sound.wav`
     ];
 
     let played = false;

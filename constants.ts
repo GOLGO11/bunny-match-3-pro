@@ -37,17 +37,18 @@ export const DIFFICULTY_CONFIG = {
   }
 };
 
+import { getAssetPath } from './utils/paths';
+
 // 8 个兔子图片，占位图（在线 URL）。如果有自己的素材，可以把这些 URL 换成你自己的。
 export const RABBIT_IMAGES = [
-  '/rabbits/rabbit0.png',
-  '/rabbits/rabbit1.png',
-  '/rabbits/rabbit2.png',
-  '/rabbits/rabbit3.png',
-  '/rabbits/rabbit4.png',
-  '/rabbits/rabbit5.png',
-  '/rabbits/rabbit6.png',
-  '/rabbits/rabbit7.png',
-
+  getAssetPath('rabbits/rabbit0.png'),
+  getAssetPath('rabbits/rabbit1.png'),
+  getAssetPath('rabbits/rabbit2.png'),
+  getAssetPath('rabbits/rabbit3.png'),
+  getAssetPath('rabbits/rabbit4.png'),
+  getAssetPath('rabbits/rabbit5.png'),
+  getAssetPath('rabbits/rabbit6.png'),
+  getAssetPath('rabbits/rabbit7.png'),
 ];
 
 

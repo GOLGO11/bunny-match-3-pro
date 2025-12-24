@@ -81,10 +81,11 @@ const App: React.FC = () => {
     adsManager.current.gameplayStart();
     
     // 开始播放背景音乐
+    const baseUrl = import.meta.env.BASE_URL || '/';
     const musicFiles = [
-      '/sounds/background-music.wav',
-      '/sounds/bgm.wav',
-      '/sounds/music.wav'
+      `${baseUrl}sounds/background-music.wav`,
+      `${baseUrl}sounds/bgm.wav`,
+      `${baseUrl}sounds/music.wav`
     ];
     
     for (const file of musicFiles) {
