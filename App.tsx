@@ -146,19 +146,20 @@ const App: React.FC = () => {
     audioManager.current.resumeBackgroundMusic();
   }, []);
 
-  // 开发模式：快捷键测试无解法界面（按 N 键）
+  // 开发模式：快捷键测试无解法界面（按 Ctrl+Shift+N 组合键，PC端）
   useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      // 开发模式：按 N 键触发无解法测试（仅在游戏进行中时）
-      if (e.key.toLowerCase() === 'n' && gameState === 'playing') {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 开发模式：按 Ctrl+Shift+N 组合键触发无解法测试（仅在游戏进行中时）
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'n' && gameState === 'playing') {
+        e.preventDefault(); // 阻止浏览器默认行为
         console.log('[Dev] Triggering noMoves test');
         handleNoMoves();
       }
     };
     
-    window.addEventListener('keydown', handleKeyPress);
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
-      window.removeEventListener('keydown', handleKeyPress);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, [gameState, handleNoMoves]);
 
@@ -191,6 +192,17 @@ const App: React.FC = () => {
 
       {/* 横屏提示（游戏进行中且移动端竖屏时显示） */}
       <LandscapePrompt gameState={gameState} />
+
+      {/* 开发模式：移动端测试无解法按钮（仅在游戏进行中时显示） */}
+      {gameState === 'playing' && (
+        <button
+          onClick={handleNoMoves}
+          className="fixed bottom-4 right-4 z-40 bg-red-500/80 hover:bg-red-600/80 backdrop-blur-sm border-2 border-red-400/50 rounded-full w-12 h-12 flex items-center justify-center text-white text-xl shadow-lg transition-all active:scale-90 md:hidden"
+          title="测试无解法界面"
+        >
+          🧪
+        </button>
+      )}
 
       {/* 设置面板 */}
       <SettingsPanel
