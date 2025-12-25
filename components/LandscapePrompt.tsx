@@ -2,7 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../i18n/useTranslation';
 
-export const LandscapePrompt: React.FC = () => {
+interface LandscapePromptProps {
+  gameState: 'start' | 'loading' | 'playing' | 'gameover' | 'noMoves';
+}
+
+export const LandscapePrompt: React.FC<LandscapePromptProps> = ({ gameState }) => {
   const { t } = useTranslation();
   const [isPortrait, setIsPortrait] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -30,8 +34,8 @@ export const LandscapePrompt: React.FC = () => {
     };
   }, []);
 
-  // 只在移动端竖屏时显示
-  if (!isMobile || !isPortrait) {
+  // 只在游戏进行中且移动端竖屏时显示
+  if (gameState !== 'playing' || !isMobile || !isPortrait) {
     return null;
   }
 

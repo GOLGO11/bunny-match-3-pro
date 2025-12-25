@@ -3,7 +3,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>兔兔爱叫连连看</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -75,6 +78,43 @@
         .bg-gradient-animated {
             background-size: 200% 200%;
             animation: gradient-shift 3s ease infinite;
+        }
+        
+        /* 横屏模式：游戏进行时 */
+        .landscape-mode {
+            /* 确保横屏布局 */
+        }
+        
+        /* 竖屏模式：开始界面 */
+        .portrait-mode {
+            /* 确保竖屏布局 */
+        }
+        
+        /* 移动端全屏样式 */
+        @media (max-width: 768px) {
+            .landscape-mode {
+                /* 横屏时隐藏可能的滚动条 */
+                overflow: hidden;
+                /* 确保全屏显示 */
+                height: 100vh;
+                height: 100dvh; /* 动态视口高度，隐藏地址栏 */
+            }
+            
+            /* 隐藏地址栏的额外处理 */
+            html, body {
+                height: 100%;
+                height: 100dvh;
+                overflow: hidden;
+            }
+        }
+        
+        /* 全屏时的样式 */
+        :fullscreen,
+        :-webkit-full-screen,
+        :-moz-full-screen,
+        :-ms-fullscreen {
+            width: 100%;
+            height: 100%;
         }
     </style>
 <script type="importmap">

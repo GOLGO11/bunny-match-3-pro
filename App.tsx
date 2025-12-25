@@ -10,6 +10,7 @@ import { AudioManager } from './services/AudioManager';
 import { Difficulty } from './constants';
 import { useTranslation } from './i18n/useTranslation';
 import { getAssetPath } from './utils/paths';
+import { requestFullscreen, lockOrientation } from './utils/fullscreen';
 
 const App: React.FC = () => {
   const { t } = useTranslation();
@@ -84,6 +85,22 @@ const App: React.FC = () => {
     // 通知平台游戏开始
     adsManager.current.gameplayStart();
     
+    // 移动端：尝试进入全屏并锁定横屏
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                     (window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
+    
+    if (isMobile) {
+      try {
+        // 先锁定横屏方向
+        await lockOrientation('landscape');
+        // 然后进入全屏（隐藏地址栏）
+        await requestFullscreen();
+      } catch (e) {
+        console.log('Fullscreen/orientation setup failed:', e);
+        // 如果失败，继续游戏
+      }
+    }
+    
     // 开始播放背景音乐
     const baseUrl = import.meta.env.BASE_URL || '/';
     const musicFiles = [
@@ -130,8 +147,15 @@ const App: React.FC = () => {
     audioManager.current.resumeBackgroundMusic();
   }, []);
 
+  // 判断是否为游戏进行中（需要横屏）
+  const isGamePlaying = gameState === 'playing' || gameState === 'loading';
+  
   return (
-    <div className="relative w-screen h-screen flex flex-col items-center justify-center overflow-hidden text-white select-none">
+    <div 
+      className={`relative w-screen h-screen flex items-center justify-center overflow-hidden text-white select-none ${
+        isGamePlaying ? 'landscape-mode' : 'portrait-mode'
+      }`}
+    >
       {/* 背景图片 */}
       <div 
         className="fixed inset-0 bg-cover bg-center bg-no-repeat"
@@ -150,8 +174,8 @@ const App: React.FC = () => {
         <div className="absolute inset-0 bg-slate-900/10 backdrop-blur-[0.5px]"></div>
       </div>
 
-      {/* 横屏提示（移动端竖屏时显示） */}
-      <LandscapePrompt />
+      {/* 横屏提示（游戏进行中且移动端竖屏时显示） */}
+      <LandscapePrompt gameState={gameState} />
 
       {/* 设置面板 */}
       <SettingsPanel
@@ -162,7 +186,9 @@ const App: React.FC = () => {
         gameState={gameState}
       />
       
-      <div className="main-game-container relative z-10 w-full h-full max-w-5xl flex flex-col p-1 sm:p-2 md:p-4 box-border">
+      <div className={`main-game-container relative z-10 w-full h-full flex flex-col p-1 sm:p-2 md:p-4 box-border ${
+        isGamePlaying ? 'max-w-5xl' : 'max-w-md'
+      }`}>
         {gameState !== 'start' && (
           <header className="game-header flex justify-between items-center mb-2 sm:mb-4 px-2 py-1 sm:py-2 relative bg-slate-900/20 backdrop-blur-sm rounded-lg border border-slate-700/30">
             <div className="flex flex-col flex-1 min-w-0">
