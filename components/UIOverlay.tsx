@@ -144,7 +144,7 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({ state, score, onStart, onR
       {state === 'gameover' && (
         isMobileLandscape ? (
           // 移动端横屏布局：垂直布局但更紧凑，可滚动
-          <div className={`flex flex-col items-center w-full max-w-lg bg-gradient-to-br from-yellow-50/10 via-orange-50/10 to-pink-50/10 border-2 border-yellow-300/30 p-4 rounded-2xl shadow-2xl backdrop-blur-xl relative overflow-y-auto max-h-[85vh] my-2`}>
+          <div className={`flex flex-col items-center w-full max-w-lg bg-gradient-to-br from-yellow-50/10 via-orange-50/10 to-pink-50/10 border-2 border-yellow-300/30 p-4 pb-6 rounded-2xl shadow-2xl backdrop-blur-xl relative overflow-y-auto max-h-[85vh] my-2`}>
             {/* 装饰性背景元素 - 减少数量 */}
             <div className="absolute top-2 left-2 text-base animate-sparkle">⏰</div>
             <div className="absolute top-2 right-3 text-base animate-float">🎉</div>
@@ -238,7 +238,7 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({ state, score, onStart, onR
       {state === 'noMoves' && (
         isMobileLandscape ? (
           // 移动端横屏布局：垂直布局但更紧凑，可滚动
-          <div className={`flex flex-col items-center w-full max-w-lg bg-gradient-to-br from-pink-50/10 via-purple-50/10 to-blue-50/10 border-2 border-pink-300/30 p-4 rounded-2xl shadow-2xl backdrop-blur-xl relative overflow-y-auto max-h-[85vh] my-2`}>
+          <div className={`flex flex-col items-center w-full max-w-lg bg-gradient-to-br from-pink-50/10 via-purple-50/10 to-blue-50/10 border-2 border-pink-300/30 p-4 pb-6 rounded-2xl shadow-2xl backdrop-blur-xl relative overflow-y-auto max-h-[85vh] my-2`}>
             {/* 装饰性背景元素 - 减少数量 */}
             <div className="absolute top-2 left-2 text-base animate-sparkle">🌸</div>
             <div className="absolute top-2 right-3 text-base animate-float">💐</div>

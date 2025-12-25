@@ -146,6 +146,22 @@ const App: React.FC = () => {
     audioManager.current.resumeBackgroundMusic();
   }, []);
 
+  // 开发模式：快捷键测试无解法界面（按 N 键）
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // 开发模式：按 N 键触发无解法测试（仅在游戏进行中时）
+      if (e.key.toLowerCase() === 'n' && gameState === 'playing') {
+        console.log('[Dev] Triggering noMoves test');
+        handleNoMoves();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyPress);
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [gameState, handleNoMoves]);
+
   // 判断是否为游戏进行中（需要横屏）
   const isGamePlaying = gameState === 'playing' || gameState === 'loading';
   
