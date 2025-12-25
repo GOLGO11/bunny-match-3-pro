@@ -146,14 +146,32 @@ const App: React.FC = () => {
     audioManager.current.resumeBackgroundMusic();
   }, []);
 
-  // 开发模式：快捷键测试无解法界面（按 Ctrl+Shift+N 组合键，PC端）
+  // 开发模式：快捷键测试无解法界面（连按三下P键，PC端）
   useEffect(() => {
+    let pKeyPresses: number[] = []; // 记录P键按下时间戳
+    const PRESS_TIME_WINDOW = 800; // 800ms内连续按三下
+    
     const handleKeyDown = (e: KeyboardEvent) => {
-      // 开发模式：按 Ctrl+Shift+N 组合键触发无解法测试（仅在游戏进行中时）
-      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'n' && gameState === 'playing') {
-        e.preventDefault(); // 阻止浏览器默认行为
-        console.log('[Dev] Triggering noMoves test');
-        handleNoMoves();
+      // 仅在游戏进行中时监听
+      if (gameState !== 'playing') return;
+      
+      // 检测P键
+      if (e.key.toLowerCase() === 'p') {
+        const now = Date.now();
+        
+        // 清除超时的按键记录
+        pKeyPresses = pKeyPresses.filter(timestamp => now - timestamp < PRESS_TIME_WINDOW);
+        
+        // 添加当前按键时间戳
+        pKeyPresses.push(now);
+        
+        // 如果连续按了三下（在时间窗口内）
+        if (pKeyPresses.length >= 3) {
+          e.preventDefault();
+          console.log('[Dev] Triggering noMoves test (triple P press)');
+          handleNoMoves();
+          pKeyPresses = []; // 重置计数器
+        }
       }
     };
     
@@ -165,6 +183,19 @@ const App: React.FC = () => {
 
   // 判断是否为游戏进行中（需要横屏）
   const isGamePlaying = gameState === 'playing' || gameState === 'loading';
+  
+  // 检测是否为移动设备（用于显示测试按钮）
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => {
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                      (window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
+      setIsMobileDevice(isMobile);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   return (
     <div 
@@ -193,11 +224,11 @@ const App: React.FC = () => {
       {/* 横屏提示（游戏进行中且移动端竖屏时显示） */}
       <LandscapePrompt gameState={gameState} />
 
-      {/* 开发模式：移动端测试无解法按钮（仅在游戏进行中时显示） */}
-      {gameState === 'playing' && (
+      {/* 开发模式：移动端测试无解法按钮（仅在移动端游戏进行中时显示） */}
+      {gameState === 'playing' && isMobileDevice && (
         <button
           onClick={handleNoMoves}
-          className="fixed bottom-4 right-4 z-40 bg-red-500/80 hover:bg-red-600/80 backdrop-blur-sm border-2 border-red-400/50 rounded-full w-12 h-12 flex items-center justify-center text-white text-xl shadow-lg transition-all active:scale-90 md:hidden"
+          className="fixed bottom-4 right-4 z-40 bg-red-500/80 hover:bg-red-600/80 backdrop-blur-sm border-2 border-red-400/50 rounded-full w-12 h-12 flex items-center justify-center text-white text-xl shadow-lg transition-all active:scale-90"
           title="测试无解法界面"
         >
           🧪
