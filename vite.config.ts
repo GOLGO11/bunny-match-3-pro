@@ -39,6 +39,14 @@ export default defineConfig(({ mode }) => {
         outDir: 'dist',
         assetsDir: 'assets',
         sourcemap: false,
+        rollupOptions: {
+          output: {
+            // 添加时间戳到文件名，确保缓存更新
+            entryFileNames: `assets/[name].[hash].js`,
+            chunkFileNames: `assets/[name].[hash].js`,
+            assetFileNames: `assets/[name].[hash].[ext]`
+          }
+        }
       }
     };
 });
