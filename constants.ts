@@ -32,10 +32,10 @@ export const EASY_LEVEL_CONFIGS: LevelConfig[] = [
 
 // 中等难度关卡配置
 export const MEDIUM_LEVEL_CONFIGS: LevelConfig[] = [
-  { level: 1, minScore: 0, maxScore: 100000, timeLimit: 25 },      // 第一关：0-10万分，25秒
-  { level: 2, minScore: 100000, maxScore: 200000, timeLimit: 15 },  // 第二关：10-20万分，15秒
-  { level: 3, minScore: 200000, maxScore: 300000, timeLimit: 8 },    // 第三关：20-30万分，8秒
-  { level: 4, minScore: 300000, maxScore: null, timeLimit: 5 },     // 最终关：30万分以上，5秒
+  { level: 1, minScore: 0, maxScore: 80000, timeLimit: 25 },      // 第一关：0-8万分，25秒
+  { level: 2, minScore: 80000, maxScore: 160000, timeLimit: 15 },  // 第二关：8-16万分，15秒
+  { level: 3, minScore: 160000, maxScore: 240000, timeLimit: 8 },    // 第三关：16-24万分，8秒
+  { level: 4, minScore: 240000, maxScore: null, timeLimit: 5 },     // 最终关：24万分以上，5秒
 ];
 
 // 困难难度关卡配置
