@@ -22,22 +22,44 @@ export interface LevelConfig {
   timeLimit: number;       // 倒计时时间（秒）
 }
 
-export const LEVEL_CONFIGS: LevelConfig[] = [
+// 简单难度关卡配置
+export const EASY_LEVEL_CONFIGS: LevelConfig[] = [
   { level: 1, minScore: 0, maxScore: 200000, timeLimit: 25 },      // 第一关：0-20万分，25秒
   { level: 2, minScore: 200000, maxScore: 400000, timeLimit: 15 },  // 第二关：20-40万分，15秒
   { level: 3, minScore: 400000, maxScore: 600000, timeLimit: 8 },    // 第三关：40-60万分，8秒
   { level: 4, minScore: 600000, maxScore: null, timeLimit: 5 },     // 第四关：60万分以上，5秒
 ];
 
-// 根据分数获取当前关卡配置
-export function getLevelByScore(score: number): LevelConfig {
-  for (const config of LEVEL_CONFIGS) {
+// 中等难度关卡配置
+export const MEDIUM_LEVEL_CONFIGS: LevelConfig[] = [
+  { level: 1, minScore: 0, maxScore: 100000, timeLimit: 25 },      // 第一关：0-10万分，25秒
+  { level: 2, minScore: 100000, maxScore: 200000, timeLimit: 15 },  // 第二关：10-20万分，15秒
+  { level: 3, minScore: 200000, maxScore: 300000, timeLimit: 8 },    // 第三关：20-30万分，8秒
+  { level: 4, minScore: 300000, maxScore: null, timeLimit: 5 },     // 最终关：30万分以上，5秒
+];
+
+// 根据难度获取关卡配置数组
+export function getLevelConfigsByDifficulty(difficulty: Difficulty): LevelConfig[] {
+  switch (difficulty) {
+    case Difficulty.EASY:
+      return EASY_LEVEL_CONFIGS;
+    case Difficulty.MEDIUM:
+      return MEDIUM_LEVEL_CONFIGS;
+    default:
+      return EASY_LEVEL_CONFIGS; // 默认使用简单难度配置
+  }
+}
+
+// 根据分数和难度获取当前关卡配置
+export function getLevelByScore(score: number, difficulty: Difficulty = Difficulty.EASY): LevelConfig {
+  const configs = getLevelConfigsByDifficulty(difficulty);
+  for (const config of configs) {
     if (score >= config.minScore && (config.maxScore === null || score < config.maxScore)) {
       return config;
     }
   }
   // 如果分数超出所有关卡，返回最后一关
-  return LEVEL_CONFIGS[LEVEL_CONFIGS.length - 1];
+  return configs[configs.length - 1];
 }
 
 // 难度配置

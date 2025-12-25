@@ -135,10 +135,10 @@ const App: React.FC = () => {
     
     setGameState('playing');
     
-    // 简单难度下，游戏开始时显示第一关提示
+    // 简单和中等难度下，游戏开始时显示第一关提示
     // 使用 finalDifficulty 确保使用正确的难度值
-    if (finalDifficulty === Difficulty.EASY) {
-      const firstLevelConfig = getLevelByScore(0);
+    if (finalDifficulty === Difficulty.EASY || finalDifficulty === Difficulty.MEDIUM) {
+      const firstLevelConfig = getLevelByScore(0, finalDifficulty);
       console.log(`[App] 游戏开始，准备显示第一关提示: 关卡 ${firstLevelConfig.level}, finalDifficulty=${finalDifficulty}`);
       // 延迟一点显示，确保游戏界面已渲染
       setTimeout(() => {
@@ -163,8 +163,8 @@ const App: React.FC = () => {
     setCurrentLevel(newLevel);
     console.log(`[Level] 关卡切换: ${oldLevel} -> ${newLevel}, 时间限制: ${levelConfig.timeLimit}秒, 当前难度: ${difficulty}`);
     
-    // 只在简单难度下显示关卡提示
-    if (difficulty === Difficulty.EASY && oldLevel !== newLevel) {
+    // 在简单和中等难度下显示关卡提示
+    if ((difficulty === Difficulty.EASY || difficulty === Difficulty.MEDIUM) && oldLevel !== newLevel) {
       console.log(`[Level] 显示关卡提示: 关卡 ${newLevel}`);
       setLevelPromptConfig(levelConfig);
     } else {
@@ -292,8 +292,8 @@ const App: React.FC = () => {
       {/* 横屏提示（游戏进行中且移动端竖屏时显示） */}
       <LandscapePrompt gameState={gameState} />
       
-      {/* 关卡提示（仅在简单难度下且横屏时显示） */}
-      {gameState === 'playing' && difficulty === Difficulty.EASY && isLandscape && (
+      {/* 关卡提示（在简单和中等难度下且横屏时显示） */}
+      {gameState === 'playing' && (difficulty === Difficulty.EASY || difficulty === Difficulty.MEDIUM) && isLandscape && (
         <LevelPrompt 
           levelConfig={levelPromptConfig} 
           onClose={handleCloseLevelPrompt}
@@ -335,7 +335,7 @@ const App: React.FC = () => {
             
             {/* 血条倒计时 - 中间 */}
             {timeRemaining !== null ? (() => {
-              const levelConfig = getLevelByScore(score);
+              const levelConfig = getLevelByScore(score, difficulty);
               const timeLimit = levelConfig.timeLimit;
               // 确保 timeRemaining 和 timeLimit 都是有效数字
               const percentage = timeLimit > 0 ? Math.max(0, Math.min(100, (timeRemaining / timeLimit) * 100)) : 0;

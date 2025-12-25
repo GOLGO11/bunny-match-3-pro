@@ -38,7 +38,7 @@ export class GameEngine {
     this.difficulty = difficulty;
     this.gemTypeCount = DIFFICULTY_CONFIG[difficulty].gemTypeCount;
     this.currentScore = 0;
-    this.currentLevel = getLevelByScore(0); // 初始为第一关
+    this.currentLevel = getLevelByScore(0, difficulty); // 初始为第一关，使用当前难度
     this.timeRemaining = this.currentLevel.timeLimit;
     this.initGrid();
     // 计时器在第一次交换后才启动
@@ -164,7 +164,7 @@ export class GameEngine {
   updateScore(totalScore: number) {
     const oldLevel = this.currentLevel.level;
     this.currentScore = totalScore;
-    const newLevelConfig = getLevelByScore(totalScore);
+    const newLevelConfig = getLevelByScore(totalScore, this.difficulty); // 使用当前难度
     
     // 检测关卡是否切换
     if (newLevelConfig.level !== this.currentLevel.level) {
