@@ -23,6 +23,27 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [soundEnabled, setSoundEnabled] = useState(true);
   const panelRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<number | null>(null);
+  
+  // 检测是否为移动设备
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // 触摸手势相关
+  const touchStartY = useRef<number | null>(null);
+  const touchStartTime = useRef<number | null>(null);
+  const minSwipeDistance = 50; // 最小滑动距离（像素）
+  const maxSwipeTime = 500; // 最大滑动时间（毫秒）
+
+  // 检测是否为移动设备
+  useEffect(() => {
+    const checkMobile = () => {
+      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                            (window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
+      setIsMobile(isMobileDevice);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // 从 localStorage 读取设置
   useEffect(() => {
@@ -42,8 +63,10 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     }
   }, [audioManager]);
 
-  // 监听鼠标移到header区域
+  // PC端：监听鼠标移到header区域
   useEffect(() => {
+    if (isMobile) return; // 移动端不使用鼠标事件
+
     const handleMouseMove = (e: MouseEvent) => {
       if (gameState !== 'playing') {
         setIsVisible(false);
@@ -101,7 +124,64 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [gameState]);
+  }, [gameState, isMobile]);
+
+  // 移动端：监听下拉手势
+  useEffect(() => {
+    if (!isMobile) return; // PC端不使用触摸事件
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (gameState !== 'playing') return;
+      
+      // 只处理从屏幕顶部开始的触摸
+      const touch = e.touches[0];
+      if (touch.clientY > 100) return; // 只处理屏幕顶部100px内的触摸
+      
+      touchStartY.current = touch.clientY;
+      touchStartTime.current = Date.now();
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (gameState !== 'playing') return;
+      if (touchStartY.current === null) return;
+      
+      // 阻止默认滚动行为
+      e.preventDefault();
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (gameState !== 'playing') return;
+      if (touchStartY.current === null || touchStartTime.current === null) return;
+
+      const touch = e.changedTouches[0];
+      const touchEndY = touch.clientY;
+      const touchEndTime = Date.now();
+      
+      const deltaY = touchEndY - touchStartY.current;
+      const deltaTime = touchEndTime - touchStartTime.current;
+
+      // 检测是否为下拉手势：向下滑动且距离足够
+      if (deltaY > minSwipeDistance && deltaTime < maxSwipeTime) {
+        // 切换面板显示状态
+        setIsVisible(prev => !prev);
+      }
+
+      // 重置触摸状态
+      touchStartY.current = null;
+      touchStartTime.current = null;
+    };
+
+    // 在document上监听触摸事件，以便在整个屏幕范围内检测下拉手势
+    document.addEventListener('touchstart', handleTouchStart, { passive: false });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [gameState, isMobile]);
 
   // 游戏不在进行时隐藏面板
   useEffect(() => {
