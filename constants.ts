@@ -1,4 +1,4 @@
-export const GRID_SIZE = 9; // 改为9*9
+export const GRID_SIZE = 6; // 6*6网格，更适合移动端
 
 export const GEM_COLORS = [
   '#ff4d4d',
@@ -22,17 +22,18 @@ export enum Difficulty {
 }
 
 // 难度配置（名称和描述通过国际化获取）
+// 6*6网格：36个格子，调整难度配置以适应更小的网格
 export const DIFFICULTY_CONFIG = {
   [Difficulty.EASY]: {
-    gemTypeCount: 4,      // 只使用4种兔子类型
+    gemTypeCount: 3,      // 简单：使用3种兔子类型（平均每种12个）
     icon: '🐰'
   },
   [Difficulty.MEDIUM]: {
-    gemTypeCount: 6,      // 使用6种兔子类型
+    gemTypeCount: 4,      // 中等：使用4种兔子类型（平均每种9个）
     icon: '🐇'
   },
   [Difficulty.HARD]: {
-    gemTypeCount: 8,      // 使用全部8种兔子类型
+    gemTypeCount: 6,      // 困难：使用6种兔子类型（平均每种6个）
     icon: '🔥'
   }
 };
