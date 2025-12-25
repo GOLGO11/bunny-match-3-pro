@@ -38,6 +38,14 @@ export const MEDIUM_LEVEL_CONFIGS: LevelConfig[] = [
   { level: 4, minScore: 300000, maxScore: null, timeLimit: 5 },     // 最终关：30万分以上，5秒
 ];
 
+// 困难难度关卡配置
+export const HARD_LEVEL_CONFIGS: LevelConfig[] = [
+  { level: 1, minScore: 0, maxScore: 20000, timeLimit: 25 },      // 第一关：0-2万分，25秒
+  { level: 2, minScore: 20000, maxScore: 40000, timeLimit: 15 },  // 第二关：2-4万分，15秒
+  { level: 3, minScore: 40000, maxScore: 60000, timeLimit: 8 },    // 第三关：4-6万分，8秒
+  { level: 4, minScore: 60000, maxScore: null, timeLimit: 5 },     // 最终关：6万分以上，5秒
+];
+
 // 根据难度获取关卡配置数组
 export function getLevelConfigsByDifficulty(difficulty: Difficulty): LevelConfig[] {
   switch (difficulty) {
@@ -45,6 +53,8 @@ export function getLevelConfigsByDifficulty(difficulty: Difficulty): LevelConfig
       return EASY_LEVEL_CONFIGS;
     case Difficulty.MEDIUM:
       return MEDIUM_LEVEL_CONFIGS;
+    case Difficulty.HARD:
+      return HARD_LEVEL_CONFIGS;
     default:
       return EASY_LEVEL_CONFIGS; // 默认使用简单难度配置
   }

@@ -143,16 +143,14 @@ const App: React.FC = () => {
     console.log('[App] 资源加载完成');
     setIsAssetsLoaded(true);
     
-    // 简单和中等难度下，资源加载完成后显示第一关提示
-    if (difficulty === Difficulty.EASY || difficulty === Difficulty.MEDIUM) {
-      const firstLevelConfig = getLevelByScore(0, difficulty);
-      console.log(`[App] 资源加载完成，显示第一关提示: 关卡 ${firstLevelConfig.level}, difficulty=${difficulty}`);
-      // 稍微延迟，确保游戏界面已完全渲染
-      setTimeout(() => {
-        console.log(`[App] 设置第一关提示配置`);
-        setLevelPromptConfig(firstLevelConfig);
-      }, 300);
-    }
+    // 所有难度下，资源加载完成后显示第一关提示
+    const firstLevelConfig = getLevelByScore(0, difficulty);
+    console.log(`[App] 资源加载完成，显示第一关提示: 关卡 ${firstLevelConfig.level}, difficulty=${difficulty}`);
+    // 稍微延迟，确保游戏界面已完全渲染
+    setTimeout(() => {
+      console.log(`[App] 设置第一关提示配置`);
+      setLevelPromptConfig(firstLevelConfig);
+    }, 300);
   }, [difficulty]);
 
   const handleRestart = () => {
@@ -174,8 +172,8 @@ const App: React.FC = () => {
     setCurrentLevel(newLevel);
     console.log(`[Level] 关卡切换: ${oldLevel} -> ${newLevel}, 时间限制: ${levelConfig.timeLimit}秒, 当前难度: ${difficulty}`);
     
-    // 在简单和中等难度下显示关卡提示
-    if ((difficulty === Difficulty.EASY || difficulty === Difficulty.MEDIUM) && oldLevel !== newLevel) {
+    // 所有难度下显示关卡提示
+    if (oldLevel !== newLevel) {
       console.log(`[Level] 显示关卡提示: 关卡 ${newLevel}`);
       setLevelPromptConfig(levelConfig);
     } else {
@@ -303,8 +301,8 @@ const App: React.FC = () => {
       {/* 横屏提示（游戏进行中且移动端竖屏时显示） */}
       <LandscapePrompt gameState={gameState} />
       
-      {/* 关卡提示（在简单和中等难度下且横屏时显示） */}
-      {gameState === 'playing' && (difficulty === Difficulty.EASY || difficulty === Difficulty.MEDIUM) && isLandscape && (
+      {/* 关卡提示（在所有难度下且横屏时显示） */}
+      {gameState === 'playing' && isLandscape && (
         <LevelPrompt 
           levelConfig={levelPromptConfig} 
           onClose={handleCloseLevelPrompt}
