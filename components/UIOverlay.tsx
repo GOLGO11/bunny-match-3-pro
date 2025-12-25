@@ -15,12 +15,33 @@ interface UIOverlayProps {
 export const UIOverlay: React.FC<UIOverlayProps> = ({ state, score, onStart, onRestart, onRewardedAd, currentDifficulty = Difficulty.MEDIUM }) => {
   const { t } = useTranslation();
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>(currentDifficulty);
+  const [isLandscape, setIsLandscape] = useState(false);
   
   // 当currentDifficulty改变时更新selectedDifficulty
   useEffect(() => {
     setSelectedDifficulty(currentDifficulty);
   }, [currentDifficulty]);
+
+  // 检测横屏/竖屏
+  useEffect(() => {
+    const checkOrientation = () => {
+      setIsLandscape(window.innerWidth > window.innerHeight);
+    };
+    
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+    
+    return () => {
+      window.removeEventListener('resize', checkOrientation);
+      window.removeEventListener('orientationchange', checkOrientation);
+    };
+  }, []);
+
   if (state === 'playing') return null;
+  
+  // 根据横屏/竖屏设置不同的最大宽度
+  const maxWidthClass = isLandscape ? 'max-w-2xl' : 'max-w-sm';
 
   return (
     <div className="absolute inset-0 bg-transparent backdrop-blur-sm flex flex-col items-center justify-center z-50 p-3 sm:p-4 md:p-6 text-center animate-in fade-in duration-300 overflow-y-auto">
@@ -114,7 +135,7 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({ state, score, onStart, onR
       )}
 
       {state === 'gameover' && (
-        <div className="flex flex-col items-center max-w-sm w-full bg-gradient-to-br from-yellow-50/10 via-orange-50/10 to-pink-50/10 border-2 border-yellow-300/30 p-6 sm:p-8 rounded-3xl shadow-2xl backdrop-blur-xl relative overflow-hidden my-4">
+        <div className={`flex flex-col items-center ${maxWidthClass} w-full bg-gradient-to-br from-yellow-50/10 via-orange-50/10 to-pink-50/10 border-2 border-yellow-300/30 p-6 sm:p-8 rounded-3xl shadow-2xl backdrop-blur-xl relative overflow-hidden my-4`}>
           {/* 装饰性背景元素 */}
           <div className="absolute top-4 left-4 text-xl sm:text-2xl animate-sparkle">⏰</div>
           <div className="absolute top-6 right-6 text-lg sm:text-xl animate-float">🎉</div>
@@ -176,7 +197,7 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({ state, score, onStart, onR
       )}
 
       {state === 'noMoves' && (
-        <div className="flex flex-col items-center max-w-sm w-full bg-gradient-to-br from-pink-50/10 via-purple-50/10 to-blue-50/10 border-2 border-pink-300/30 p-6 sm:p-8 rounded-3xl shadow-2xl backdrop-blur-xl relative overflow-hidden my-4">
+        <div className={`flex flex-col items-center ${maxWidthClass} w-full bg-gradient-to-br from-pink-50/10 via-purple-50/10 to-blue-50/10 border-2 border-pink-300/30 p-6 sm:p-8 rounded-3xl shadow-2xl backdrop-blur-xl relative overflow-hidden my-4`}>
           {/* 装饰性背景元素 */}
           <div className="absolute top-4 left-4 text-xl sm:text-2xl animate-sparkle">🌸</div>
           <div className="absolute top-6 right-6 text-lg sm:text-xl animate-float">💐</div>

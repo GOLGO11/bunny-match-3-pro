@@ -200,7 +200,7 @@ const App: React.FC = () => {
             
             {/* 血条倒计时 - 中间 */}
             {timeRemaining !== null ? (
-              <div className="flex flex-col items-center gap-1 w-full max-w-[200px] flex-shrink-0">
+              <div className="flex flex-col items-center w-full max-w-[200px] flex-shrink-0">
                 {/* 血条容器 */}
                 <div className="w-full h-4 sm:h-5 md:h-6 bg-slate-700/80 rounded-full border border-slate-600 shadow-lg overflow-hidden backdrop-blur-sm">
                   {/* 血条填充 */}
@@ -215,16 +215,6 @@ const App: React.FC = () => {
                     {/* 血条内部光效 */}
                     <div className="h-full w-full bg-gradient-to-t from-transparent via-white/20 to-transparent"></div>
                   </div>
-                </div>
-                {/* 剩余时间文字 */}
-                <div className="flex items-center gap-1.5">
-                  <span className={`text-xs sm:text-sm font-bold font-mono ${
-                    timeRemaining <= 5 ? 'text-red-400 animate-pulse' : 
-                    timeRemaining <= 10 ? 'text-orange-400' : 
-                    'text-green-400'
-                  }`}>
-                    {timeRemaining}s
-                  </span>
                 </div>
               </div>
             ) : null}
@@ -250,7 +240,7 @@ const App: React.FC = () => {
           </header>
         )}
 
-        <div className="relative flex-grow bg-transparent rounded-xl sm:rounded-2xl shadow-2xl border border-slate-700/30 overflow-hidden backdrop-blur-[2px] min-h-0">
+        <div className="relative flex-grow bg-transparent rounded-xl sm:rounded-2xl overflow-hidden min-h-0">
           {gameState === 'playing' && (
             <GameBoard 
               onScoreUpdate={handleScoreUpdate} 
