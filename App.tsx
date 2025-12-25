@@ -234,6 +234,9 @@ const App: React.FC = () => {
   
   // 检测是否为移动设备（用于显示测试按钮）
   const [isMobileDevice, setIsMobileDevice] = useState(false);
+  // 检测是否为横屏（用于显示关卡提示）
+  const [isLandscape, setIsLandscape] = useState(false);
+  
   useEffect(() => {
     const checkMobile = () => {
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
@@ -243,6 +246,23 @@ const App: React.FC = () => {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
+  // 检测横屏/竖屏
+  useEffect(() => {
+    const checkOrientation = () => {
+      const isLandscapeMode = window.innerWidth > window.innerHeight;
+      setIsLandscape(isLandscapeMode);
+    };
+    
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+    
+    return () => {
+      window.removeEventListener('resize', checkOrientation);
+      window.removeEventListener('orientationchange', checkOrientation);
+    };
   }, []);
   
   return (
@@ -272,8 +292,8 @@ const App: React.FC = () => {
       {/* 横屏提示（游戏进行中且移动端竖屏时显示） */}
       <LandscapePrompt gameState={gameState} />
       
-      {/* 关卡提示（仅在简单难度下显示） */}
-      {gameState === 'playing' && difficulty === Difficulty.EASY && (
+      {/* 关卡提示（仅在简单难度下且横屏时显示） */}
+      {gameState === 'playing' && difficulty === Difficulty.EASY && isLandscape && (
         <LevelPrompt 
           levelConfig={levelPromptConfig} 
           onClose={handleCloseLevelPrompt}
