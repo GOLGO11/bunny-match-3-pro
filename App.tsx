@@ -32,6 +32,7 @@ const App: React.FC = () => {
   const [isPaused, setIsPaused] = useState(false);
   const [currentLevel, setCurrentLevel] = useState(1); // 当前关卡编号
   const [levelPromptConfig, setLevelPromptConfig] = useState<LevelConfig | null>(null); // 关卡提示配置
+  const [isAssetsLoaded, setIsAssetsLoaded] = useState(false); // 资源是否已加载完成
   const adsManager = useRef(new AdsManager());
   const audioManager = useRef(new AudioManager());
 
@@ -134,17 +135,23 @@ const App: React.FC = () => {
     }
     
     setGameState('playing');
+    setIsAssetsLoaded(false); // 重置资源加载状态
+  }, [difficulty]);
+
+  // 资源加载完成回调
+  const handleAssetsLoaded = useCallback(() => {
+    console.log('[App] 资源加载完成');
+    setIsAssetsLoaded(true);
     
-    // 简单和中等难度下，游戏开始时显示第一关提示
-    // 使用 finalDifficulty 确保使用正确的难度值
-    if (finalDifficulty === Difficulty.EASY || finalDifficulty === Difficulty.MEDIUM) {
-      const firstLevelConfig = getLevelByScore(0, finalDifficulty);
-      console.log(`[App] 游戏开始，准备显示第一关提示: 关卡 ${firstLevelConfig.level}, finalDifficulty=${finalDifficulty}`);
-      // 延迟一点显示，确保游戏界面已渲染
+    // 简单和中等难度下，资源加载完成后显示第一关提示
+    if (difficulty === Difficulty.EASY || difficulty === Difficulty.MEDIUM) {
+      const firstLevelConfig = getLevelByScore(0, difficulty);
+      console.log(`[App] 资源加载完成，显示第一关提示: 关卡 ${firstLevelConfig.level}, difficulty=${difficulty}`);
+      // 稍微延迟，确保游戏界面已完全渲染
       setTimeout(() => {
         console.log(`[App] 设置第一关提示配置`);
         setLevelPromptConfig(firstLevelConfig);
-      }, 600); // 稍微延迟，确保游戏界面已完全渲染
+      }, 300);
     }
   }, [difficulty]);
 
@@ -153,9 +160,13 @@ const App: React.FC = () => {
     setCombo(0);
     setTimeRemaining(null);
     setCurrentLevel(1); // 重置关卡
+    setLevelPromptConfig(null); // 清除之前的提示
+    setIsAssetsLoaded(false); // 重置资源加载状态
     // 恢复背景音乐
     audioManager.current.resumeBackgroundMusic();
     setGameState('playing');
+    // 注意：关卡提示会在 handleAssetsLoaded 中显示，如果资源已经加载过，
+    // GameBoard 的 useEffect 可能不会再次执行，所以我们需要确保资源加载状态正确
   };
 
   // 关卡切换回调
@@ -404,6 +415,7 @@ const App: React.FC = () => {
               onTimeUp={handleTimeUp}
               onTimeUpdate={handleTimeUpdate}
               onLevelChange={handleLevelChange}
+              onAssetsLoaded={handleAssetsLoaded}
               currentScore={score}
               difficulty={difficulty}
               isPaused={isPaused}

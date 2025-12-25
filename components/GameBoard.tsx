@@ -16,12 +16,13 @@ interface GameBoardProps {
   onTimeUp?: () => void;
   onTimeUpdate?: (time: number | null) => void;
   onLevelChange?: (oldLevel: number, newLevel: number, levelConfig: any) => void; // 关卡切换回调
+  onAssetsLoaded?: () => void; // 资源加载完成回调
   currentScore?: number; // 当前累计分数
   difficulty: Difficulty;
   isPaused?: boolean;
 }
 
-export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver, onNoMoves, onTimeUp, onTimeUpdate, onLevelChange, currentScore = 0, difficulty, isPaused = false }) => {
+export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver, onNoMoves, onTimeUp, onTimeUpdate, onLevelChange, onAssetsLoaded, currentScore = 0, difficulty, isPaused = false }) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
@@ -43,6 +44,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver,
   timeUpdateRef.current = onTimeUpdate;
   const levelChangeRef = useRef(onLevelChange);
   levelChangeRef.current = onLevelChange;
+  const assetsLoadedRef = useRef(onAssetsLoaded);
+  assetsLoadedRef.current = onAssetsLoaded;
   const currentScoreRef = useRef(currentScore);
   currentScoreRef.current = currentScore;
   const isPausedRef = useRef(isPaused);
@@ -55,11 +58,23 @@ export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver,
     if (!ctx) return;
 
     const init = async () => {
+      // 如果资源已经加载过，直接通知父组件（重新开始的情况）
+      if (rendererRef.current && isAssetsLoaded) {
+        if (assetsLoadedRef.current) {
+          assetsLoadedRef.current();
+        }
+        return; // 不需要重新加载资源
+      }
+      
       // Create Renderer and load images first
       const renderer = new Renderer(ctx);
       rendererRef.current = renderer;
       await renderer.loadImages();
       setIsAssetsLoaded(true);
+      // 通知父组件资源已加载完成
+      if (assetsLoadedRef.current) {
+        assetsLoadedRef.current();
+      }
 
       // Initialize Audio Manager
       if (!audioManagerRef.current) {
@@ -351,3 +366,4 @@ export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver,
     </div>
   );
 };
+
