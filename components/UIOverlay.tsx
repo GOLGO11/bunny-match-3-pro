@@ -143,51 +143,44 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({ state, score, onStart, onR
 
       {state === 'gameover' && (
         isMobileLandscape ? (
-          // 移动端横屏布局：横向排列，更宽
-          <div className={`flex items-center ${maxWidthClass} w-full bg-gradient-to-br from-yellow-50/10 via-orange-50/10 to-pink-50/10 border-2 border-yellow-300/30 p-4 sm:p-6 rounded-3xl shadow-2xl backdrop-blur-xl relative overflow-hidden my-2`}>
-            {/* 装饰性背景元素 */}
-            <div className="absolute top-2 left-2 text-lg animate-sparkle">⏰</div>
-            <div className="absolute top-3 right-4 text-base animate-float">🎉</div>
-            <div className="absolute bottom-2 left-3 text-base animate-wiggle">💛</div>
-            <div className="absolute bottom-3 right-2 text-lg animate-sparkle">⭐</div>
+          // 移动端横屏布局：垂直布局但更紧凑，可滚动
+          <div className={`flex flex-col items-center w-full max-w-lg bg-gradient-to-br from-yellow-50/10 via-orange-50/10 to-pink-50/10 border-2 border-yellow-300/30 p-4 rounded-2xl shadow-2xl backdrop-blur-xl relative overflow-y-auto max-h-[85vh] my-2`}>
+            {/* 装饰性背景元素 - 减少数量 */}
+            <div className="absolute top-2 left-2 text-base animate-sparkle">⏰</div>
+            <div className="absolute top-2 right-3 text-base animate-float">🎉</div>
             
-            {/* 左侧：图标和标题 */}
-            <div className="flex-shrink-0 mr-4 sm:mr-6">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <div className="text-3xl sm:text-4xl animate-float" style={{ animationDelay: '0s' }}>🐰</div>
-                <div className="text-4xl sm:text-5xl animate-float" style={{ animationDelay: '0.2s' }}>⏰</div>
-                <div className="text-3xl sm:text-4xl animate-float" style={{ animationDelay: '0.4s' }}>🐰</div>
+            {/* 图标和标题 */}
+            <div className="flex items-center justify-center gap-1.5 mb-2">
+              <div className="text-2xl animate-float" style={{ animationDelay: '0s' }}>🐰</div>
+              <div className="text-3xl animate-float" style={{ animationDelay: '0.2s' }}>⏰</div>
+              <div className="text-2xl animate-float" style={{ animationDelay: '0.4s' }}>🐰</div>
+            </div>
+            
+            <h1 className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 mb-2 animate-pulse text-center">
+              {t.gameOver.timeUp}
+            </h1>
+            
+            {/* 分数显示 - 紧凑布局 */}
+            <div className="bg-gradient-to-r from-yellow-500/30 via-orange-500/30 to-pink-500/30 border-2 border-yellow-400/40 rounded-xl p-3 mb-3 backdrop-blur-sm w-full">
+              <div className="text-xs text-yellow-200 mb-1 font-semibold text-center">{t.gameOver.finalScore}</div>
+              <div className="text-4xl font-mono font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-orange-300 to-pink-300 text-center">
+                {score.toLocaleString()}
               </div>
-              <h1 className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 mb-1 animate-pulse text-center">
-                {t.gameOver.timeUp}
-              </h1>
+              <p className="text-yellow-200/80 text-[10px] mt-1.5 text-center">{t.gameOver.encouragement}</p>
             </div>
             
-            {/* 中间：分数显示 */}
-            <div className="flex-1 flex flex-col items-center justify-center px-4">
-              <div className="text-xs sm:text-sm text-yellow-200 mb-1 font-semibold">{t.gameOver.finalScore}</div>
-              <div className="bg-gradient-to-r from-yellow-500/30 via-orange-500/30 to-pink-500/30 border-2 border-yellow-400/40 rounded-xl p-3 sm:p-4 backdrop-blur-sm w-full">
-                <div className="text-3xl sm:text-4xl font-mono font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-orange-300 to-pink-300 text-center">
-                  {score.toLocaleString()}
-                </div>
-                <p className="text-yellow-200/80 text-[9px] sm:text-[10px] mt-1 text-center">{t.gameOver.encouragement}</p>
-              </div>
-            </div>
-            
-            {/* 右侧：按钮 */}
-            <div className="flex-shrink-0 ml-4 sm:ml-6">
-              <button 
-                onClick={onRestart}
-                className="py-3 sm:py-4 px-4 sm:px-6 bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 hover:from-yellow-500 hover:via-orange-600 hover:to-pink-600 text-white font-bold text-sm sm:text-base rounded-xl transition-all active:scale-95 shadow-md transform hover:scale-105 relative overflow-hidden group whitespace-nowrap"
-              >
-                <span className="relative z-10 flex items-center gap-2">
-                  <span className="text-sm sm:text-base animate-bounce inline-block">🔄</span>
-                  <span>{t.gameOver.playAgain}</span>
-                  <span className="text-sm sm:text-base animate-bounce inline-block" style={{ animationDelay: '0.1s' }}>✨</span>
-                </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-              </button>
-            </div>
+            {/* 按钮 */}
+            <button 
+              onClick={onRestart}
+              className="w-full py-2.5 px-4 bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 hover:from-yellow-500 hover:via-orange-600 hover:to-pink-600 text-white font-bold text-sm rounded-xl transition-all active:scale-95 shadow-md transform hover:scale-105 relative overflow-hidden group"
+            >
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                <span className="text-sm animate-bounce inline-block">🔄</span>
+                <span>{t.gameOver.playAgain}</span>
+                <span className="text-sm animate-bounce inline-block" style={{ animationDelay: '0.1s' }}>✨</span>
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+            </button>
           </div>
         ) : (
           // 电脑端/竖屏布局：保持原有样式
@@ -244,56 +237,51 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({ state, score, onStart, onR
 
       {state === 'noMoves' && (
         isMobileLandscape ? (
-          // 移动端横屏布局：横向排列，更宽
-          <div className={`flex items-center ${maxWidthClass} w-full bg-gradient-to-br from-pink-50/10 via-purple-50/10 to-blue-50/10 border-2 border-pink-300/30 p-4 sm:p-6 rounded-3xl shadow-2xl backdrop-blur-xl relative overflow-hidden my-2`}>
-            {/* 装饰性背景元素 */}
-            <div className="absolute top-2 left-2 text-lg animate-sparkle">🌸</div>
-            <div className="absolute top-3 right-4 text-base animate-float">💐</div>
-            <div className="absolute bottom-2 left-3 text-base animate-wiggle">🌺</div>
-            <div className="absolute bottom-3 right-2 text-lg animate-sparkle">🌼</div>
+          // 移动端横屏布局：垂直布局但更紧凑，可滚动
+          <div className={`flex flex-col items-center w-full max-w-lg bg-gradient-to-br from-pink-50/10 via-purple-50/10 to-blue-50/10 border-2 border-pink-300/30 p-4 rounded-2xl shadow-2xl backdrop-blur-xl relative overflow-y-auto max-h-[85vh] my-2`}>
+            {/* 装饰性背景元素 - 减少数量 */}
+            <div className="absolute top-2 left-2 text-base animate-sparkle">🌸</div>
+            <div className="absolute top-2 right-3 text-base animate-float">💐</div>
             
-            {/* 左侧：图标和标题 */}
-            <div className="flex-shrink-0 mr-4 sm:mr-6">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <div className="text-3xl sm:text-4xl animate-float" style={{ animationDelay: '0s' }}>🐰</div>
-                <div className="text-4xl sm:text-5xl animate-float" style={{ animationDelay: '0.2s' }}>🌸</div>
-                <div className="text-3xl sm:text-4xl animate-float" style={{ animationDelay: '0.4s' }}>🐰</div>
-              </div>
-              <h1 className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-500 to-blue-400 mb-1 animate-pulse text-center">
-                {t.noMoves.title}
-              </h1>
-              <div className="text-xs sm:text-sm text-pink-200 mb-1 text-center">{t.noMoves.gameOver}</div>
+            {/* 图标和标题 */}
+            <div className="flex items-center justify-center gap-1.5 mb-2">
+              <div className="text-2xl animate-float" style={{ animationDelay: '0s' }}>🐰</div>
+              <div className="text-3xl animate-float" style={{ animationDelay: '0.2s' }}>🌸</div>
+              <div className="text-2xl animate-float" style={{ animationDelay: '0.4s' }}>🐰</div>
             </div>
             
-            {/* 中间：提示文字和分数显示 */}
-            <div className="flex-1 flex flex-col items-center justify-center px-4">
-              <div className="bg-pink-500/20 border border-pink-400/30 rounded-xl p-2 sm:p-3 backdrop-blur-sm w-full mb-2">
-                <p className="text-pink-100 text-[9px] sm:text-[10px] text-center whitespace-pre-line leading-relaxed">
-                  {t.noMoves.message}
-                </p>
-              </div>
-              <div className="bg-gradient-to-r from-pink-500/30 via-purple-500/30 to-blue-500/30 border-2 border-pink-400/40 rounded-xl p-3 sm:p-4 backdrop-blur-sm w-full">
-                <div className="text-xs sm:text-sm text-pink-200 mb-1 text-center">{t.noMoves.encouragement}</div>
-                <div className="text-3xl sm:text-4xl font-mono font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-purple-300 to-blue-300 text-center">
-                  {score.toLocaleString()}
-                </div>
+            <h1 className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-500 to-blue-400 mb-1.5 animate-pulse text-center">
+              {t.noMoves.title}
+            </h1>
+            <div className="text-xs text-pink-200 mb-2 text-center">{t.noMoves.gameOver}</div>
+            
+            {/* 提示文字 - 简化 */}
+            <div className="bg-pink-500/20 border border-pink-400/30 rounded-xl p-2.5 mb-2.5 backdrop-blur-sm w-full">
+              <p className="text-pink-100 text-[10px] text-center leading-relaxed">
+                {t.noMoves.message.split('\n')[0]}
+              </p>
+            </div>
+            
+            {/* 分数显示 - 紧凑布局 */}
+            <div className="bg-gradient-to-r from-pink-500/30 via-purple-500/30 to-blue-500/30 border-2 border-pink-400/40 rounded-xl p-3 mb-3 backdrop-blur-sm w-full">
+              <div className="text-xs text-pink-200 mb-1 font-semibold text-center">{t.noMoves.encouragement}</div>
+              <div className="text-4xl font-mono font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-purple-300 to-blue-300 text-center">
+                {score.toLocaleString()}
               </div>
             </div>
             
-            {/* 右侧：按钮 */}
-            <div className="flex-shrink-0 ml-4 sm:ml-6">
-              <button 
-                onClick={onRestart}
-                className="py-3 sm:py-4 px-4 sm:px-6 bg-gradient-to-r from-pink-400 via-purple-500 to-blue-500 hover:from-pink-500 hover:via-purple-600 hover:to-blue-600 text-white font-bold text-sm sm:text-base rounded-xl transition-all active:scale-95 shadow-md transform hover:scale-105 relative overflow-hidden group whitespace-nowrap"
-              >
-                <span className="relative z-10 flex items-center gap-2">
-                  <span className="text-sm sm:text-base animate-bounce inline-block">🔄</span>
-                  <span>{t.noMoves.playAgain}</span>
-                  <span className="text-sm sm:text-base animate-bounce inline-block" style={{ animationDelay: '0.1s' }}>✨</span>
-                </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-              </button>
-            </div>
+            {/* 按钮 */}
+            <button 
+              onClick={onRestart}
+              className="w-full py-2.5 px-4 bg-gradient-to-r from-pink-400 via-purple-500 to-blue-500 hover:from-pink-500 hover:via-purple-600 hover:to-blue-600 text-white font-bold text-sm rounded-xl transition-all active:scale-95 shadow-md transform hover:scale-105 relative overflow-hidden group"
+            >
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                <span className="text-sm animate-bounce inline-block">🔄</span>
+                <span>{t.noMoves.playAgain}</span>
+                <span className="text-sm animate-bounce inline-block" style={{ animationDelay: '0.1s' }}>✨</span>
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+            </button>
           </div>
         ) : (
           // 电脑端/竖屏布局：保持原有样式
