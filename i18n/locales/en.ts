@@ -66,6 +66,18 @@ export default {
   // 按钮
   buttons: {
     freeReward: "Free Reward"
+  },
+  
+  // 设置
+  settings: {
+    music: "Music",
+    musicOn: "Music: On",
+    musicOff: "Music: Off",
+    sound: "Sound",
+    soundOn: "Sound: On",
+    soundOff: "Sound: Off",
+    pause: "Pause",
+    resume: "Resume"
   }
 };
 

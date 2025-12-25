@@ -16,9 +16,10 @@ interface GameBoardProps {
   onTimeUp?: () => void;
   onTimeUpdate?: (time: number | null) => void;
   difficulty: Difficulty;
+  isPaused?: boolean;
 }
 
-export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver, onNoMoves, onTimeUp, onTimeUpdate, difficulty }) => {
+export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver, onNoMoves, onTimeUp, onTimeUpdate, difficulty, isPaused = false }) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
@@ -38,6 +39,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver,
   timeUpRef.current = onTimeUp;
   const timeUpdateRef = useRef(onTimeUpdate);
   timeUpdateRef.current = onTimeUpdate;
+  const isPausedRef = useRef(isPaused);
+  isPausedRef.current = isPaused;
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -92,16 +95,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver,
           difficulty
         );
         
-        // 如果是困难模式，初始化倒计时显示（初始为null，等待第一次交换）
-        if (difficulty === Difficulty.HARD) {
-          // 计时器在第一次交换后才启动，所以初始时不显示
-          if (timeUpdateRef.current) {
-            timeUpdateRef.current(null);
-          }
-        } else {
-          if (timeUpdateRef.current) {
-            timeUpdateRef.current(null);
-          }
+        // 初始化倒计时显示（初始为null，等待第一次交换）
+        // 计时器在第一次交换后才启动，所以初始时不显示
+        if (timeUpdateRef.current) {
+          timeUpdateRef.current(null);
         }
       }
       const engine = engineRef.current;
@@ -165,11 +162,11 @@ export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver,
       window.addEventListener('resize', handleResize);
       handleResize();
 
-      // 更新倒计时显示（困难模式）
+      // 更新倒计时显示（所有难度）
       const updateTimer = () => {
         // 使用最新的引擎引用
         const currentEngine = engineRef.current;
-        if (difficulty === Difficulty.HARD && currentEngine) {
+        if (currentEngine) {
           const remaining = currentEngine.getTimeRemaining();
           // 如果计时器已启动，更新剩余时间
           // 即使时间到了（remaining === 0），也显示0，直到游戏状态改变
@@ -188,13 +185,31 @@ export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver,
           }
         }
       };
-      const timerUpdateInterval = difficulty === Difficulty.HARD 
-        ? setInterval(updateTimer, 100) 
-        : null;
+      const timerUpdateInterval = setInterval(updateTimer, 100);
 
       let animationId: number;
       let lastTime = performance.now();
       const loop = (currentTime: number) => {
+        // 如果暂停，只渲染当前状态，不更新逻辑
+        if (isPausedRef.current) {
+          renderer.clear();
+          renderer.drawGrid();
+          
+          // 绘制所有兔子（暂停时保持当前状态）
+          for (let y = 0; y < Constants.GRID_SIZE; y++) {
+            for (let x = 0; x < Constants.GRID_SIZE; x++) {
+              const gem = engine.grid[y][x];
+              if (gem) {
+                renderer.drawGem(gem, false);
+              }
+            }
+          }
+          
+          renderer.drawParticles();
+          animationId = requestAnimationFrame(loop);
+          return;
+        }
+        
         const deltaTime = currentTime - lastTime;
         lastTime = currentTime;
         
@@ -264,6 +279,17 @@ export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver,
        cleanup.then(unsub => unsub?.());
     };
   }, [difficulty]);
+
+  // 监听暂停状态变化，控制计时器
+  useEffect(() => {
+    if (engineRef.current) {
+      if (isPaused) {
+        engineRef.current.pauseTimer();
+      } else {
+        engineRef.current.resumeTimer();
+      }
+    }
+  }, [isPaused]);
 
   return (
     <div className="w-full h-full flex items-center justify-center p-2 bg-slate-800/50 rounded-xl relative">

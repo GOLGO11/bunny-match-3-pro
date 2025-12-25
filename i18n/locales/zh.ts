@@ -58,6 +58,17 @@ export default {
   
   buttons: {
     freeReward: "免费奖励"
+  },
+  
+  settings: {
+    music: "音乐",
+    musicOn: "音乐: 开",
+    musicOff: "音乐: 关",
+    sound: "音效",
+    soundOn: "音效: 开",
+    soundOff: "音效: 关",
+    pause: "暂停",
+    resume: "继续"
   }
 };
 

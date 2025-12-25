@@ -8,16 +8,17 @@ export class GameEngine {
   scoreCallback: (score: number, combo: number) => void;
   matchCallback?: (matches: Gem[]) => void; // 消除回调
   noMovesCallback?: () => void; // 无解法回调
-  timeUpCallback?: () => void; // 时间到回调（困难模式）
+  timeUpCallback?: () => void; // 时间到回调（所有难度）
   comboCount: number = 0;
   difficulty: Difficulty;
   gemTypeCount: number; // 当前难度使用的兔子类型数量
   
-  // 计时器相关（困难模式）
+  // 计时器相关（所有难度）
   private timerInterval: number | null = null;
   private timeRemaining: number = 20; // 20秒倒计时
   private readonly TIME_LIMIT = 20; // 20秒限制
   private timerStarted: boolean = false; // 计时器是否已启动
+  private timerPaused: boolean = false; // 计时器是否已暂停
   
   constructor(
     onScore: (s: number, c: number) => void, 
@@ -120,16 +121,14 @@ export class GameEngine {
     const dy = Math.abs(p1.y - p2.y);
     if (!((dx === 1 && dy === 0) || (dx === 0 && dy === 1))) return;
 
-    // 在交换开始时立即启动或重置计时器（困难模式）
+    // 在交换开始时立即启动或重置计时器（所有难度）
     // 这样用户一有动作就重置计时器
-    if (this.difficulty === Difficulty.HARD) {
-      if (!this.timerStarted) {
-        // 第一次交换，启动计时器
-        this.startTimer();
-      } else {
-        // 后续交换，重置计时器
-        this.resetTimer();
-      }
+    if (!this.timerStarted) {
+      // 第一次交换，启动计时器
+      this.startTimer();
+    } else {
+      // 后续交换，重置计时器
+      this.resetTimer();
     }
 
     try {
@@ -157,6 +156,12 @@ export class GameEngine {
   private async handleSequencing(initialMatches: Gem[]) {
     let currentMatches = initialMatches;
     this.comboCount = 1;
+    
+    // 第一次匹配时重置计时器（如果计时器已启动）
+    if (this.timerStarted) {
+      this.resetTimer();
+    }
+    
     try {
       while (currentMatches.length > 0) {
         this.status = GameStatus.MATCHING;
@@ -179,7 +184,13 @@ export class GameEngine {
         this.refill();
         await this.sleep(400);
         currentMatches = this.findMatches();
-        if (currentMatches.length > 0) this.comboCount++;
+        if (currentMatches.length > 0) {
+          this.comboCount++;
+          // 每次combo发生时重置计时器
+          if (this.timerStarted) {
+            this.resetTimer();
+          }
+        }
       }
     } finally {
       this.status = GameStatus.IDLE;
@@ -293,9 +304,9 @@ export class GameEngine {
     return hasMatch;
   }
 
-  // 计时器相关方法（困难模式）
+  // 计时器相关方法（所有难度）
   private startTimer(): void {
-    if (this.difficulty !== Difficulty.HARD || this.timerStarted) return;
+    if (this.timerStarted) return;
     this.timerStarted = true;
     this.timeRemaining = this.TIME_LIMIT;
     
@@ -305,6 +316,9 @@ export class GameEngine {
     }
     
     this.timerInterval = window.setInterval(() => {
+      // 如果暂停，不减少时间
+      if (this.timerPaused) return;
+      
       if (this.timeRemaining > 0) {
         this.timeRemaining -= 1;
       }
@@ -321,7 +335,7 @@ export class GameEngine {
   }
 
   private resetTimer(): void {
-    if (this.difficulty !== Difficulty.HARD || !this.timerStarted) return;
+    if (!this.timerStarted) return;
     this.timeRemaining = this.TIME_LIMIT;
   }
 
@@ -348,9 +362,20 @@ export class GameEngine {
     return this.timerStarted;
   }
 
+  // 暂停计时器
+  pauseTimer(): void {
+    this.timerPaused = true;
+  }
+
+  // 恢复计时器
+  resumeTimer(): void {
+    this.timerPaused = false;
+  }
+
   // 清理资源
   destroy(): void {
     this.stopTimer();
     this.timerStarted = false;
+    this.timerPaused = false;
   }
 }

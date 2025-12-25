@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GameBoard } from './components/GameBoard';
 import { UIOverlay } from './components/UIOverlay';
 import { LanguageSelector } from './components/LanguageSelector';
+import { SettingsPanel } from './components/SettingsPanel';
 import { AdsManager } from './services/AdsManager';
 import { AudioManager } from './services/AudioManager';
 import { Difficulty } from './constants';
@@ -15,6 +16,7 @@ const App: React.FC = () => {
   const [gameState, setGameState] = useState<'start' | 'loading' | 'playing' | 'gameover' | 'noMoves'>('start');
   const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.MEDIUM);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
   const adsManager = useRef(new AdsManager());
   const audioManager = useRef(new AudioManager());
 
@@ -116,27 +118,62 @@ const App: React.FC = () => {
     }
   };
 
+  const handlePause = useCallback(() => {
+    setIsPaused(true);
+    audioManager.current.pauseBackgroundMusic();
+  }, []);
+
+  const handleResume = useCallback(() => {
+    setIsPaused(false);
+    audioManager.current.resumeBackgroundMusic();
+  }, []);
+
   return (
     <div className="relative w-screen h-screen flex flex-col items-center justify-center bg-slate-900 overflow-hidden text-white select-none">
-      <div className="w-full h-full max-w-2xl flex flex-col p-4 box-border">
+      {/* 设置面板 */}
+      <SettingsPanel
+        audioManager={audioManager.current}
+        onPause={handlePause}
+        onResume={handleResume}
+        isPaused={isPaused}
+        gameState={gameState}
+      />
+      
+      <div className="main-game-container w-full h-full max-w-2xl flex flex-col p-4 box-border">
         {gameState !== 'start' && (
-          <header className="flex justify-between items-center mb-4 px-2 relative">
+          <header className="game-header flex justify-between items-center mb-4 px-2 relative">
             <div className="flex flex-col flex-1">
               <span className="text-xs text-slate-400 uppercase tracking-widest">{t.game.score}</span>
               <span className="text-3xl font-bold font-mono">{score.toLocaleString()}</span>
             </div>
-            {/* 困难模式倒计时显示在中间 */}
-            {difficulty === Difficulty.HARD && timeRemaining !== null && (
-              <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-1.5 bg-red-500/90 backdrop-blur-sm px-3 py-1.5 rounded-full border-2 border-red-400 shadow-lg z-10">
-                <span className="text-base animate-pulse">⏰</span>
-                <span className={`text-lg font-bold font-mono ${
-                  timeRemaining <= 5 ? 'text-yellow-300 animate-pulse' : 
-                  timeRemaining <= 10 ? 'text-orange-300' : 
-                  'text-white'
-                }`}>
-                  {timeRemaining}
-                </span>
-                <span className="text-[10px] text-red-100">{t.game.timeRemaining}</span>
+            {/* 血条倒计时显示在中间（所有难度） */}
+            {timeRemaining !== null && (
+              <div className="absolute left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-1.5 z-10 w-48 sm:w-56">
+                {/* 血条容器 */}
+                <div className="w-full h-6 sm:h-7 bg-slate-700/80 rounded-full border-2 border-slate-600 shadow-lg overflow-hidden backdrop-blur-sm">
+                  {/* 血条填充 */}
+                  <div 
+                    className={`h-full transition-all duration-300 ease-linear rounded-full ${
+                      timeRemaining <= 5 ? 'bg-gradient-to-r from-red-600 to-red-500 animate-pulse' : 
+                      timeRemaining <= 10 ? 'bg-gradient-to-r from-orange-500 to-orange-400' : 
+                      'bg-gradient-to-r from-green-500 to-green-400'
+                    }`}
+                    style={{ width: `${(timeRemaining / 20) * 100}%` }}
+                  >
+                    {/* 血条内部光效 */}
+                    <div className="h-full w-full bg-gradient-to-t from-transparent via-white/20 to-transparent"></div>
+                  </div>
+                </div>
+                {/* 剩余时间文字 */}
+                <div className="flex items-center gap-1.5">
+                  <span className={`text-xs sm:text-sm font-bold font-mono ${
+                    timeRemaining <= 5 ? 'text-red-400 animate-pulse' : 
+                    timeRemaining <= 10 ? 'text-orange-400' : 
+                    'text-green-400'
+                  }`}>
+                    {timeRemaining}s
+                  </span>
+                </div>
               </div>
             )}
             <div className="flex flex-col items-end flex-1">
@@ -157,6 +194,7 @@ const App: React.FC = () => {
               onTimeUp={handleTimeUp}
               onTimeUpdate={setTimeRemaining}
               difficulty={difficulty}
+              isPaused={isPaused}
             />
           )}
           
