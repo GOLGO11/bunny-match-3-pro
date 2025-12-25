@@ -17,12 +17,13 @@ interface GameBoardProps {
   onTimeUpdate?: (time: number | null) => void;
   onLevelChange?: (oldLevel: number, newLevel: number, levelConfig: any) => void; // 关卡切换回调
   onAssetsLoaded?: () => void; // 资源加载完成回调
+  audioManager?: AudioManager; // 音频管理器实例（从App传入，确保使用同一个实例）
   currentScore?: number; // 当前累计分数
   difficulty: Difficulty;
   isPaused?: boolean;
 }
 
-export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver, onNoMoves, onTimeUp, onTimeUpdate, onLevelChange, onAssetsLoaded, currentScore = 0, difficulty, isPaused = false }) => {
+export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver, onNoMoves, onTimeUp, onTimeUpdate, onLevelChange, onAssetsLoaded, audioManager: externalAudioManager, currentScore = 0, difficulty, isPaused = false }) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
@@ -76,8 +77,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver,
         assetsLoadedRef.current();
       }
 
-      // Initialize Audio Manager
-      if (!audioManagerRef.current) {
+      // Initialize Audio Manager（优先使用外部传入的实例，确保与SettingsPanel使用同一个实例）
+      if (externalAudioManager) {
+        audioManagerRef.current = externalAudioManager;
+      } else if (!audioManagerRef.current) {
         audioManagerRef.current = new AudioManager();
       }
       const audioManager = audioManagerRef.current;

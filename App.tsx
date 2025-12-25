@@ -416,6 +416,7 @@ const App: React.FC = () => {
               onTimeUpdate={handleTimeUpdate}
               onLevelChange={handleLevelChange}
               onAssetsLoaded={handleAssetsLoaded}
+              audioManager={audioManager.current}
               currentScore={score}
               difficulty={difficulty}
               isPaused={isPaused}

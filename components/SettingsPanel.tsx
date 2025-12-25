@@ -126,44 +126,92 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     };
   }, [gameState, isMobile]);
 
-  // 移动端：监听下拉手势
+  // 移动端：监听下拉/上拉手势和点击外部区域
   useEffect(() => {
     if (!isMobile) return; // PC端不使用触摸事件
 
     const handleTouchStart = (e: TouchEvent) => {
       if (gameState !== 'playing') return;
       
-      // 只处理从屏幕顶部开始的触摸
       const touch = e.touches[0];
-      if (touch.clientY > 100) return; // 只处理屏幕顶部100px内的触摸
+      const panel = panelRef.current;
       
-      touchStartY.current = touch.clientY;
-      touchStartTime.current = Date.now();
+      // 如果面板已显示，检查是否从面板内开始触摸
+      if (isVisible && panel) {
+        const panelRect = panel.getBoundingClientRect();
+        const isOnPanel = 
+          touch.clientX >= panelRect.left && 
+          touch.clientX <= panelRect.right && 
+          touch.clientY >= panelRect.top && 
+          touch.clientY <= panelRect.bottom;
+        
+        // 如果从面板内开始，记录触摸位置（用于上拉关闭）
+        if (isOnPanel) {
+          touchStartY.current = touch.clientY;
+          touchStartTime.current = Date.now();
+          return;
+        }
+      }
+      
+      // 如果面板未显示，只处理从屏幕顶部开始的触摸（用于下拉打开）
+      if (!isVisible && touch.clientY <= 100) {
+        touchStartY.current = touch.clientY;
+        touchStartTime.current = Date.now();
+      }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       if (gameState !== 'playing') return;
       if (touchStartY.current === null) return;
       
-      // 阻止默认滚动行为
+      // 如果面板已显示，允许上拉关闭，不阻止默认行为
+      if (isVisible) {
+        return;
+      }
+      
+      // 如果面板未显示，阻止默认滚动行为（下拉打开时）
       e.preventDefault();
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
       if (gameState !== 'playing') return;
-      if (touchStartY.current === null || touchStartTime.current === null) return;
-
-      const touch = e.changedTouches[0];
-      const touchEndY = touch.clientY;
-      const touchEndTime = Date.now();
       
-      const deltaY = touchEndY - touchStartY.current;
-      const deltaTime = touchEndTime - touchStartTime.current;
+      const touch = e.changedTouches[0];
+      const panel = panelRef.current;
+      
+      // 检查触摸是否在面板内
+      let isTouchInside = false;
+      if (panel) {
+        const panelRect = panel.getBoundingClientRect();
+        isTouchInside = 
+          touch.clientX >= panelRect.left && 
+          touch.clientX <= panelRect.right && 
+          touch.clientY >= panelRect.top && 
+          touch.clientY <= panelRect.bottom;
+      }
+      
+      if (touchStartY.current !== null && touchStartTime.current !== null) {
+        const touchEndY = touch.clientY;
+        const touchEndTime = Date.now();
+        
+        const deltaY = touchEndY - touchStartY.current;
+        const deltaTime = touchEndTime - touchStartTime.current;
+        const absDeltaY = Math.abs(deltaY);
 
-      // 检测是否为下拉手势：向下滑动且距离足够
-      if (deltaY > minSwipeDistance && deltaTime < maxSwipeTime) {
-        // 切换面板显示状态
-        setIsVisible(prev => !prev);
+        if (isVisible) {
+          // 面板已显示：检测上拉手势（向上滑动）关闭面板
+          if (deltaY < -minSwipeDistance && deltaTime < maxSwipeTime) {
+            setIsVisible(false);
+          } else if (absDeltaY < 20 && !isTouchInside) {
+            // 如果不是手势滑动（滑动距离很小），且触摸在面板外，关闭面板
+            setIsVisible(false);
+          }
+        } else {
+          // 面板未显示：检测下拉手势（向下滑动）打开面板
+          if (deltaY > minSwipeDistance && deltaTime < maxSwipeTime) {
+            setIsVisible(true);
+          }
+        }
       }
 
       // 重置触摸状态
@@ -171,17 +219,39 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
       touchStartTime.current = null;
     };
 
+    // 点击外部区域关闭面板（仅处理点击事件，触摸事件在 handleTouchEnd 中处理）
+    const handleClickOutside = (e: MouseEvent) => {
+      if (gameState !== 'playing' || !isVisible) return;
+      
+      const panel = panelRef.current;
+      if (!panel) return;
+      
+      const panelRect = panel.getBoundingClientRect();
+      const isClickInside = 
+        e.clientX >= panelRect.left && 
+        e.clientX <= panelRect.right && 
+        e.clientY >= panelRect.top && 
+        e.clientY <= panelRect.bottom;
+      
+      if (!isClickInside) {
+        setIsVisible(false);
+      }
+    };
+
     // 在document上监听触摸事件，以便在整个屏幕范围内检测下拉手势
     document.addEventListener('touchstart', handleTouchStart, { passive: false });
     document.addEventListener('touchmove', handleTouchMove, { passive: false });
     document.addEventListener('touchend', handleTouchEnd, { passive: true });
+    // 点击外部区域关闭（仅PC端，移动端通过触摸事件处理）
+    document.addEventListener('click', handleClickOutside);
 
     return () => {
       document.removeEventListener('touchstart', handleTouchStart);
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener('click', handleClickOutside);
     };
-  }, [gameState, isMobile]);
+  }, [gameState, isMobile, isVisible]);
 
   // 游戏不在进行时隐藏面板
   useEffect(() => {
@@ -199,9 +269,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
   const handleSoundToggle = () => {
     const newValue = !soundEnabled;
+    console.log(`[Settings] 音效开关切换: ${soundEnabled} -> ${newValue}`);
     setSoundEnabled(newValue);
     audioManager.setEnabled(newValue);
     localStorage.setItem('game-sound-enabled', String(newValue));
+    // 验证设置是否生效
+    console.log(`[Settings] 音效开关已设置为: ${newValue}, audioManager.soundEnabled 应该是: ${newValue}`);
   };
 
   const handlePauseToggle = () => {

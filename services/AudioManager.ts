@@ -48,17 +48,30 @@ export class AudioManager {
   }
 
   // 播放音频文件（如果存在）
-  async playSoundFile(url: string, volume: number = 0.5): Promise<void> {
-    if (!this.soundEnabled) return;
+  async playSoundFile(url: string, volume: number = 0.5): Promise<boolean> {
+    if (!this.soundEnabled) {
+      // 音效被禁用，返回 false 表示未播放
+      return false;
+    }
 
     try {
       const audio = new Audio(url);
       audio.volume = volume;
+      // 设置错误处理，如果文件不存在，会触发 error 事件
+      audio.addEventListener('error', () => {
+        // 文件加载失败，静默处理
+      });
       await audio.play();
+      return true; // 成功播放
     } catch (e) {
       // 如果文件不存在或播放失败，使用生成的音效
-      console.log('Audio file not found, using generated sound');
-      this.playGeneratedSound(volume);
+      // 但只有在音效启用时才调用
+      if (this.soundEnabled) {
+        console.log('Audio file not found, using generated sound');
+        this.playGeneratedSound(volume);
+        return true; // 即使使用生成的音效，也算播放成功
+      }
+      return false;
     }
   }
 
@@ -93,6 +106,13 @@ export class AudioManager {
 
   // 播放消除音效（优先使用音频文件，否则使用生成的音效）
   async playMatchSound(matchCount: number = 3): Promise<void> {
+    // 如果音效被禁用，直接返回
+    if (!this.soundEnabled) {
+      console.log(`[AudioManager] 音效已禁用，跳过播放`);
+      return;
+    }
+    console.log(`[AudioManager] 播放消除音效，matchCount: ${matchCount}, soundEnabled: ${this.soundEnabled}`);
+    
     // 根据消除数量调整音量
     const volume = Math.min(0.7, 0.3 + matchCount * 0.1);
     
@@ -109,16 +129,18 @@ export class AudioManager {
     let played = false;
     for (const file of soundFiles) {
       try {
-        await this.playSoundFile(file, volume);
-        played = true;
-        break;
+        const result = await this.playSoundFile(file, volume);
+        if (result) {
+          played = true;
+          break;
+        }
       } catch (e) {
         // 继续尝试下一个文件
       }
     }
 
-    // 如果所有文件都失败，使用生成的音效
-    if (!played) {
+    // 如果所有文件都失败且音效启用，使用生成的音效
+    if (!played && this.soundEnabled) {
       this.playGeneratedSound(volume);
     }
   }
