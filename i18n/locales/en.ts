@@ -90,6 +90,7 @@ export default {
   // 关卡提示
   levelPrompt: {
     title: "Level",
+    finalLevel: "Final Level",
     timeLimit: "Time Limit",
     description: "Keep it up! You're doing great!",
     scoreRange: "Score Range"

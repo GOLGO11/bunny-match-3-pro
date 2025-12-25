@@ -79,6 +79,7 @@ export default {
   
   levelPrompt: {
     title: "レベル",
+    finalLevel: "最終レベル",
     timeLimit: "制限時間",
     description: "頑張って！素晴らしいです！",
     scoreRange: "スコア範囲"

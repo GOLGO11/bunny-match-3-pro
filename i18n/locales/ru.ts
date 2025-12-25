@@ -79,6 +79,7 @@ export default {
   
   levelPrompt: {
     title: "Уровень",
+    finalLevel: "Финальный Уровень",
     timeLimit: "Лимит Времени",
     description: "Продолжайте! У вас отлично получается!",
     scoreRange: "Диапазон Счета"

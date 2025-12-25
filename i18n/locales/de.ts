@@ -79,6 +79,7 @@ export default {
   
   levelPrompt: {
     title: "Level",
+    finalLevel: "Endlevel",
     timeLimit: "Zeitlimit",
     description: "Weiter so! Du machst das großartig!",
     scoreRange: "Punktbereich"

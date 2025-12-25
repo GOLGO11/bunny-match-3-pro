@@ -323,7 +323,7 @@ const App: React.FC = () => {
                       {t.game.level || 'Level'}
                     </span>
                     <span className="text-base sm:text-lg md:text-xl cute-number text-purple-200 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] font-bold">
-                      {currentLevel}
+                      {currentLevel === 4 ? (t.levelPrompt?.finalLevel || '最终关卡') : currentLevel}
                     </span>
                   </div>
                   {/* 血条容器 */}

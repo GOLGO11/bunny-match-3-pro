@@ -79,6 +79,7 @@ export default {
   
   levelPrompt: {
     title: "Nivel",
+    finalLevel: "Nivel Final",
     timeLimit: "Límite de Tiempo",
     description: "¡Sigue así! ¡Lo estás haciendo genial!",
     scoreRange: "Rango de Puntuación"

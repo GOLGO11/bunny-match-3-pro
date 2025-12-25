@@ -79,6 +79,7 @@ export default {
   
   levelPrompt: {
     title: "关卡",
+    finalLevel: "最终关卡",
     timeLimit: "时间限制",
     description: "加油！继续努力！",
     scoreRange: "分数范围"

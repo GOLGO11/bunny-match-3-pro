@@ -49,7 +49,10 @@ export const LevelPrompt: React.FC<LevelPromptProps> = ({ levelConfig, onClose }
         }`}
       >
         <h2 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-500 to-blue-400 animate-fade-in drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
-          {t.levelPrompt?.title || '关卡'} {levelConfig.level}
+          {levelConfig.level === 4 
+            ? (t.levelPrompt?.finalLevel || '最终关卡')
+            : `${t.levelPrompt?.title || '关卡'} ${levelConfig.level}`
+          }
         </h2>
       </div>
     </div>
