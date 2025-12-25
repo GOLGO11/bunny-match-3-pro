@@ -69,6 +69,11 @@ export default {
     soundOff: "音效: 关",
     pause: "暂停",
     resume: "继续"
+  },
+  
+  landscape: {
+    title: "请横屏游戏",
+    message: "为了获得最佳游戏体验，请将设备旋转至横屏模式"
   }
 };
 

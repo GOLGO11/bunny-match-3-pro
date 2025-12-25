@@ -292,9 +292,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver,
   }, [isPaused]);
 
   return (
-    <div className="w-full h-full flex items-center justify-center p-2 bg-slate-800/50 rounded-xl relative">
+    <div className="w-full h-full flex items-center justify-center p-2 bg-transparent rounded-xl relative">
       {!isAssetsLoaded && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-800/80 z-10">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/60 backdrop-blur-sm z-10 rounded-xl">
            <div className="w-10 h-10 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mb-2"></div>
            <p className="text-sm text-slate-300">{t.game.loadingRabbits}</p>
         </div>

@@ -23,7 +23,7 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({ state, score, onStart, onR
   if (state === 'playing') return null;
 
   return (
-    <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-md flex flex-col items-center justify-center z-50 p-3 sm:p-4 md:p-6 text-center animate-in fade-in duration-300 overflow-y-auto">
+    <div className="absolute inset-0 bg-transparent backdrop-blur-sm flex flex-col items-center justify-center z-50 p-3 sm:p-4 md:p-6 text-center animate-in fade-in duration-300 overflow-y-auto">
       {state === 'start' && (
         <div className="flex flex-col items-center max-w-md w-full bg-gradient-to-br from-pink-50/10 via-purple-50/10 to-blue-50/10 border-2 border-pink-300/30 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl shadow-2xl backdrop-blur-xl relative overflow-hidden my-2 sm:my-4">
           {/* 装饰性背景元素 - 使用自定义动画 */}

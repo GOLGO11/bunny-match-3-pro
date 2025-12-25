@@ -78,6 +78,12 @@ export default {
     soundOff: "Sound: Off",
     pause: "Pause",
     resume: "Resume"
+  },
+  
+  // 横屏提示
+  landscape: {
+    title: "Please Rotate to Landscape",
+    message: "For the best gaming experience, please rotate your device to landscape mode"
   }
 };
 

@@ -49,9 +49,8 @@ export class Renderer {
   }
 
   drawGrid() {
-    // 深色背景
-    this.ctx.fillStyle = '#0f172a';
-    this.ctx.fillRect(0, 0, this.width, this.height);
+    // 透明背景，让背景图显示出来
+    this.ctx.clearRect(0, 0, this.width, this.height);
     
     // 绘制绿色藤条边框
     this.ctx.save();

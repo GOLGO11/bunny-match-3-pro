@@ -4,10 +4,12 @@ import { GameBoard } from './components/GameBoard';
 import { UIOverlay } from './components/UIOverlay';
 import { LanguageSelector } from './components/LanguageSelector';
 import { SettingsPanel } from './components/SettingsPanel';
+import { LandscapePrompt } from './components/LandscapePrompt';
 import { AdsManager } from './services/AdsManager';
 import { AudioManager } from './services/AudioManager';
 import { Difficulty } from './constants';
 import { useTranslation } from './i18n/useTranslation';
+import { getAssetPath } from './utils/paths';
 
 const App: React.FC = () => {
   const { t } = useTranslation();
@@ -129,7 +131,28 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative w-screen h-screen flex flex-col items-center justify-center bg-slate-900 overflow-hidden text-white select-none">
+    <div className="relative w-screen h-screen flex flex-col items-center justify-center overflow-hidden text-white select-none">
+      {/* 背景图片 */}
+      <div 
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `url(${getAssetPath('background.jpg')}), url(${getAssetPath('background.png')})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          // 确保背景图在电脑上正确显示，2730*1319分辨率适配
+          minHeight: '100vh',
+          minWidth: '100vw',
+          // 保持背景图比例，避免拉伸
+          backgroundAttachment: 'fixed'
+        }}
+      >
+        {/* 背景遮罩层，确保内容可读性（更透明以显示背景图） */}
+        <div className="absolute inset-0 bg-slate-900/10 backdrop-blur-[0.5px]"></div>
+      </div>
+
+      {/* 横屏提示（移动端竖屏时显示） */}
+      <LandscapePrompt />
+
       {/* 设置面板 */}
       <SettingsPanel
         audioManager={audioManager.current}
@@ -139,12 +162,14 @@ const App: React.FC = () => {
         gameState={gameState}
       />
       
-      <div className="main-game-container w-full h-full max-w-2xl flex flex-col p-4 box-border">
+      <div className="main-game-container relative z-10 w-full h-full max-w-2xl flex flex-col p-4 box-border">
         {gameState !== 'start' && (
-          <header className="game-header flex justify-between items-center mb-4 px-2 relative">
+          <header className="game-header flex justify-between items-center mb-4 px-2 relative bg-slate-900/20 backdrop-blur-sm rounded-lg border border-slate-700/30">
             <div className="flex flex-col flex-1">
-              <span className="text-xs text-slate-400 uppercase tracking-widest">{t.game.score}</span>
-              <span className="text-3xl font-bold font-mono">{score.toLocaleString()}</span>
+              <span className="text-xs cute-label text-pink-300 uppercase tracking-widest drop-shadow-lg">{t.game.score}</span>
+              <span className="text-3xl cute-number text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(255,182,193,0.3)' }}>
+                {score.toLocaleString()}
+              </span>
             </div>
             {/* 血条倒计时显示在中间（所有难度） */}
             {timeRemaining !== null && (
@@ -177,15 +202,26 @@ const App: React.FC = () => {
               </div>
             )}
             <div className="flex flex-col items-end flex-1">
-              <span className="text-xs text-slate-400 uppercase tracking-widest">{t.game.combo}</span>
-              <span className={`text-2xl font-bold transition-all ${combo > 1 ? 'text-yellow-400 scale-110' : 'text-slate-500'}`}>
+              <span className="text-xs cute-label text-yellow-300 uppercase tracking-widest drop-shadow-lg">{t.game.combo}</span>
+              <span 
+                className={`text-3xl cute-number transition-all drop-shadow-[0_3px_6px_rgba(0,0,0,0.9)] ${
+                  combo > 1 
+                    ? 'text-yellow-300 scale-110' 
+                    : 'text-yellow-400/70'
+                }`}
+                style={{ 
+                  textShadow: combo > 1 
+                    ? '3px 3px 6px rgba(0,0,0,0.9), 0 0 15px rgba(255,215,0,0.6), 0 0 25px rgba(255,215,0,0.4)' 
+                    : '2px 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(255,215,0,0.3)'
+                }}
+              >
                 x{combo}
               </span>
             </div>
           </header>
         )}
 
-        <div className="relative flex-grow bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 overflow-hidden">
+        <div className="relative flex-grow bg-transparent rounded-2xl shadow-2xl border border-slate-700/30 overflow-hidden backdrop-blur-[2px]">
           {gameState === 'playing' && (
             <GameBoard 
               onScoreUpdate={handleScoreUpdate} 
