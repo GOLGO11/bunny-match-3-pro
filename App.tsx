@@ -190,16 +190,18 @@ const App: React.FC = () => {
         isGamePlaying ? 'max-w-5xl' : 'max-w-md'
       }`}>
         {gameState !== 'start' && (
-          <header className="game-header flex justify-between items-center mb-2 sm:mb-4 px-2 py-1 sm:py-2 relative bg-slate-900/20 backdrop-blur-sm rounded-lg border border-slate-700/30">
-            <div className="flex flex-col flex-1 min-w-0">
+          <header className="game-header grid grid-cols-3 items-center mb-2 sm:mb-4 px-2 sm:px-4 py-1 sm:py-2 gap-2 sm:gap-4 bg-slate-900/20 backdrop-blur-sm rounded-lg border border-slate-700/30">
+            {/* 得分 - 左侧 */}
+            <div className="flex flex-col min-w-0">
               <span className="text-[10px] sm:text-xs cute-label text-pink-300 uppercase tracking-widest drop-shadow-lg">{t.game.score}</span>
               <span className="text-xl sm:text-2xl md:text-3xl cute-number text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] truncate" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(255,182,193,0.3)' }}>
                 {score.toLocaleString()}
               </span>
             </div>
-            {/* 血条倒计时显示在中间（所有难度） */}
-            {timeRemaining !== null && (
-              <div className="absolute left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-1 z-10 w-32 sm:w-40 md:w-48">
+            
+            {/* 血条倒计时 - 中间 */}
+            {timeRemaining !== null ? (
+              <div className="flex flex-col items-center gap-1 justify-self-center w-full max-w-[200px]">
                 {/* 血条容器 */}
                 <div className="w-full h-4 sm:h-5 md:h-6 bg-slate-700/80 rounded-full border border-slate-600 shadow-lg overflow-hidden backdrop-blur-sm">
                   {/* 血条填充 */}
@@ -226,8 +228,12 @@ const App: React.FC = () => {
                   </span>
                 </div>
               </div>
+            ) : (
+              <div className="flex-1"></div>
             )}
-            <div className="flex flex-col items-end flex-1 min-w-0">
+            
+            {/* 连击 - 右侧 */}
+            <div className="flex flex-col items-end min-w-0">
               <span className="text-[10px] sm:text-xs cute-label text-yellow-300 uppercase tracking-widest drop-shadow-lg">{t.game.combo}</span>
               <span 
                 className={`text-xl sm:text-2xl md:text-3xl cute-number transition-all drop-shadow-[0_3px_6px_rgba(0,0,0,0.9)] ${
