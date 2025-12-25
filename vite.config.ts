@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
     // GitHub Actions 会自动从环境变量获取仓库名
     const repoName = process.env.GITHUB_REPOSITORY 
       ? process.env.GITHUB_REPOSITORY.split('/')[1]
-      : 'bunny-match-3'; // 默认仓库名，如果不同请修改这里
+      : 'bunny-match-3-pro'; // 默认仓库名，如果不同请修改这里
     
     // 生产环境（GitHub Pages）使用仓库名作为 base，开发环境使用根路径
     const base = (mode === 'production' && process.env.GITHUB_ACTIONS) 
