@@ -17,7 +17,7 @@ const App: React.FC = () => {
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
   const [gameState, setGameState] = useState<'start' | 'loading' | 'playing' | 'gameover' | 'noMoves'>('start');
-  const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.MEDIUM);
+  const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.HARD);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   
   // 时间更新回调
@@ -87,14 +87,15 @@ const App: React.FC = () => {
     adsManager.current.showInterstitialAd();
   }, []);
 
-  const handleStart = useCallback(async (selectedDifficulty?: Difficulty) => {
-    const finalDifficulty = selectedDifficulty || difficulty;
-    if (selectedDifficulty) {
-      setDifficulty(selectedDifficulty);
-    }
-    setTimeRemaining(null);
+  const handleStart = useCallback(async () => {
+    // 固定使用困难模式
+    const finalDifficulty = Difficulty.HARD;
+    setDifficulty(finalDifficulty);
     setCurrentLevel(1); // 重置关卡
     setLevelPromptConfig(null); // 清除之前的提示
+    // 初始化时间为第一关的时间限制，确保血条一开始就显示
+    const firstLevelConfig = getLevelByScore(0, finalDifficulty);
+    setTimeRemaining(firstLevelConfig.timeLimit);
     setGameState('loading');
     await adsManager.current.showLoadingAd();
     
@@ -136,7 +137,7 @@ const App: React.FC = () => {
     
     setGameState('playing');
     setIsAssetsLoaded(false); // 重置资源加载状态
-  }, [difficulty]);
+  }, []);
 
   // 资源加载完成回调
   const handleAssetsLoaded = useCallback(() => {
@@ -332,26 +333,75 @@ const App: React.FC = () => {
       <div className={`main-game-container relative z-10 w-full h-full flex flex-col p-1 sm:p-2 md:p-4 box-border ${
         isGamePlaying ? 'max-w-5xl mx-auto' : 'max-w-md mx-auto'
       }`}>
-        {gameState !== 'start' && (
-          <header className="game-header flex items-center justify-center mb-2 sm:mb-4 px-2 sm:px-4 py-1 sm:py-2 gap-3 sm:gap-4 md:gap-6 bg-transparent rounded-lg">
-            {/* 得分 - 左侧 */}
-            <div className="flex flex-col min-w-0">
-              <span className="text-[10px] sm:text-xs cute-label text-pink-300 uppercase tracking-widest drop-shadow-lg">{t.game.score}</span>
-              <span className="text-xl sm:text-2xl md:text-3xl cute-number text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] truncate" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(255,182,193,0.3)' }}>
-                {score.toLocaleString()}
-              </span>
-            </div>
+
+        <div className="relative flex-grow flex gap-2 sm:gap-3 md:gap-4 bg-transparent rounded-xl sm:rounded-2xl overflow-hidden min-h-0">
+          {/* 游戏区域 */}
+          <div className="relative flex-grow bg-transparent rounded-xl sm:rounded-2xl overflow-hidden min-h-0">
+            {gameState === 'playing' && (
+              <GameBoard 
+                onScoreUpdate={handleScoreUpdate} 
+                onGameOver={handleGameOver}
+                onNoMoves={handleNoMoves}
+                onTimeUp={handleTimeUp}
+                onTimeUpdate={handleTimeUpdate}
+                onLevelChange={handleLevelChange}
+                onAssetsLoaded={handleAssetsLoaded}
+                audioManager={audioManager.current}
+                currentScore={score}
+                difficulty={difficulty}
+                isPaused={isPaused}
+              />
+            )}
             
-            {/* 血条倒计时 - 中间 */}
-            {timeRemaining !== null ? (() => {
-              const levelConfig = getLevelByScore(score, difficulty);
-              const timeLimit = levelConfig.timeLimit;
-              // 确保 timeRemaining 和 timeLimit 都是有效数字
-              const percentage = timeLimit > 0 ? Math.max(0, Math.min(100, (timeRemaining / timeLimit) * 100)) : 0;
-              // 调试：输出血条宽度计算
-              console.log(`[App] Render: timeRemaining=${timeRemaining}, timeLimit=${timeLimit}, percentage=${percentage}%`);
-              return (
-                <div className="flex flex-col items-center w-full max-w-[200px] flex-shrink-0 gap-1">
+            <UIOverlay 
+              state={gameState} 
+              score={score}
+              onStart={() => handleStart()}
+              onRestart={handleRestart}
+              onRewardedAd={handleRequestReward}
+              currentDifficulty={difficulty}
+            />
+          </div>
+
+          {/* 右侧信息显示（仅在游戏进行中显示） */}
+          {gameState === 'playing' && (() => {
+            const levelConfig = getLevelByScore(score, difficulty);
+            const timeLimit = levelConfig.timeLimit;
+            // 使用 timeRemaining 如果已设置，否则使用当前关卡的时间限制
+            const displayTime = timeRemaining !== null ? timeRemaining : timeLimit;
+            const percentage = timeLimit > 0 ? Math.max(0, Math.min(100, (displayTime / timeLimit) * 100)) : 100;
+            
+            return (
+              <div className="flex flex-col items-end justify-start gap-3 sm:gap-4 pt-2 sm:pt-4 min-w-[80px] sm:min-w-[100px] md:min-w-[120px]">
+                {/* 得分 - 第一排 */}
+                <div className="flex flex-col items-end min-w-0">
+                  <span className="text-[10px] sm:text-xs cute-label text-pink-300 uppercase tracking-widest drop-shadow-lg">{t.game.score}</span>
+                  <span className="text-xl sm:text-2xl md:text-3xl cute-number text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] truncate" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(255,182,193,0.3)' }}>
+                    {score.toLocaleString()}
+                  </span>
+                </div>
+                
+                {/* 连击 - 第二排 */}
+                <div className="flex flex-col items-end min-w-0">
+                  <span className="text-[10px] sm:text-xs cute-label text-yellow-300 uppercase tracking-widest drop-shadow-lg">{t.game.combo}</span>
+                  <span 
+                    className={`text-xl sm:text-2xl md:text-3xl cute-number transition-all drop-shadow-[0_3px_6px_rgba(0,0,0,0.9)] ${
+                      combo > 1 
+                        ? 'text-yellow-300 scale-110' 
+                        : 'text-yellow-400/70'
+                    }`}
+                    style={{ 
+                      textShadow: combo > 1 
+                        ? '3px 3px 6px rgba(0,0,0,0.9), 0 0 15px rgba(255,215,0,0.6), 0 0 25px rgba(255,215,0,0.4)' 
+                        : '2px 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(255,215,0,0.3)'
+                    }}
+                  >
+                    x{combo}
+                  </span>
+                </div>
+                
+                {/* 关卡和血条 - 第三排 */}
+                <div className="flex flex-col items-end gap-1.5 w-full">
                   {/* 关卡显示 */}
                   <div className="flex items-center gap-1.5">
                     <span className="text-[9px] sm:text-[10px] cute-label text-purple-300 uppercase tracking-wider drop-shadow-lg">
@@ -366,8 +416,8 @@ const App: React.FC = () => {
                     {/* 血条填充 */}
                     <div 
                       className={`h-full transition-all duration-300 ease-linear rounded-full ${
-                        timeRemaining <= timeLimit * 0.2 ? 'bg-gradient-to-r from-red-600 to-red-500 animate-pulse' : 
-                        timeRemaining <= timeLimit * 0.5 ? 'bg-gradient-to-r from-orange-500 to-orange-400' : 
+                        displayTime <= timeLimit * 0.2 ? 'bg-gradient-to-r from-red-600 to-red-500 animate-pulse' : 
+                        displayTime <= timeLimit * 0.5 ? 'bg-gradient-to-r from-orange-500 to-orange-400' : 
                         'bg-gradient-to-r from-green-500 to-green-400'
                       }`}
                       style={{ 
@@ -380,55 +430,9 @@ const App: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              );
-            })() : null}
-            
-            {/* 连击 - 右侧 */}
-            <div className="flex flex-col items-end min-w-0">
-              <span className="text-[10px] sm:text-xs cute-label text-yellow-300 uppercase tracking-widest drop-shadow-lg">{t.game.combo}</span>
-              <span 
-                className={`text-xl sm:text-2xl md:text-3xl cute-number transition-all drop-shadow-[0_3px_6px_rgba(0,0,0,0.9)] ${
-                  combo > 1 
-                    ? 'text-yellow-300 scale-110' 
-                    : 'text-yellow-400/70'
-                }`}
-                style={{ 
-                  textShadow: combo > 1 
-                    ? '3px 3px 6px rgba(0,0,0,0.9), 0 0 15px rgba(255,215,0,0.6), 0 0 25px rgba(255,215,0,0.4)' 
-                    : '2px 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(255,215,0,0.3)'
-                }}
-              >
-                x{combo}
-              </span>
-            </div>
-          </header>
-        )}
-
-        <div className="relative flex-grow bg-transparent rounded-xl sm:rounded-2xl overflow-hidden min-h-0">
-          {gameState === 'playing' && (
-            <GameBoard 
-              onScoreUpdate={handleScoreUpdate} 
-              onGameOver={handleGameOver}
-              onNoMoves={handleNoMoves}
-              onTimeUp={handleTimeUp}
-              onTimeUpdate={handleTimeUpdate}
-              onLevelChange={handleLevelChange}
-              onAssetsLoaded={handleAssetsLoaded}
-              audioManager={audioManager.current}
-              currentScore={score}
-              difficulty={difficulty}
-              isPaused={isPaused}
-            />
-          )}
-          
-          <UIOverlay 
-            state={gameState} 
-            score={score}
-            onStart={handleStart}
-            onRestart={handleRestart}
-            onRewardedAd={handleRequestReward}
-            currentDifficulty={difficulty}
-          />
+              </div>
+            );
+          })()}
         </div>
       </div>
     </div>

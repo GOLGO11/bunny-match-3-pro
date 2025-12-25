@@ -179,7 +179,32 @@ export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver,
         dragPixelPosRef.current = null;
       };
 
-      const input = new InputHandler(canvas, onDragStart, onDragMove, onDragEnd);
+      // 道具点击处理
+      const onItemClick = (x: number, y: number) => {
+        if (engine.status !== Types.GameStatus.IDLE) return;
+        const gem = engine.grid[y]?.[x];
+        // 检查是否是道具（胡萝卜或草莓，樱花不需要点击激活）
+        if (gem && gem.isItem && gem.itemType && gem.itemType !== Types.ItemType.CHERRY_BLOSSOM) {
+          // 检查是否在冷却期内（防止连续点击道具或误触）
+          if (inputRef.current && inputRef.current.isInItemCooldown()) {
+            // 在冷却期内，忽略道具点击
+            return;
+          }
+          // 立即清理拖拽状态，防止道具位置被高亮
+          dragFromRef.current = null;
+          dragToRef.current = null;
+          dragPixelPosRef.current = null;
+          // 立即设置冷却期和清理输入状态（在激活之前，防止误触）
+          // 记录道具激活的位置，用于防止误触新下落的兔子
+          if (inputRef.current) {
+            inputRef.current.notifyItemActivated(x, y);
+          }
+          // 激活道具
+          engine.activateItem(x, y);
+        }
+      };
+
+      const input = new InputHandler(canvas, onDragStart, onDragMove, onDragEnd, onItemClick);
       inputRef.current = input;
 
       const handleResize = () => {

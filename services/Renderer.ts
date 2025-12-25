@@ -1,6 +1,6 @@
 
-import { Gem } from '../types';
-import { GRID_SIZE, RABBIT_IMAGES } from '../constants';
+import { Gem, ItemType } from '../types';
+import { GRID_SIZE, RABBIT_IMAGES, ITEM_IMAGES } from '../constants';
 import { ParticleEffect } from './ParticleEffect';
 
 export class Renderer {
@@ -10,6 +10,7 @@ export class Renderer {
   cellSize: number = 0;
   padding: number = 6;
   rabbitImages: HTMLImageElement[] = [];
+  itemImages: Map<ItemType, HTMLImageElement> = new Map();
   isReady: boolean = false;
   particleEffect: ParticleEffect;
 
@@ -19,7 +20,8 @@ export class Renderer {
   }
 
   async loadImages(): Promise<void> {
-    const loadPromises = RABBIT_IMAGES.map(url => {
+    // 加载兔子图片
+    const rabbitLoadPromises = RABBIT_IMAGES.map(url => {
       return new Promise<HTMLImageElement>((resolve, reject) => {
         const img = new Image();
         img.src = url;
@@ -29,11 +31,29 @@ export class Renderer {
       });
     });
 
+    // 加载道具图片
+    const itemLoadPromises = Object.entries(ITEM_IMAGES).map(([itemType, url]) => {
+      return new Promise<[ItemType, HTMLImageElement]>((resolve, reject) => {
+        const img = new Image();
+        img.src = url;
+        img.crossOrigin = "anonymous";
+        img.onload = () => resolve([itemType as ItemType, img]);
+        img.onerror = reject;
+      });
+    });
+
     try {
-      this.rabbitImages = await Promise.all(loadPromises);
+      this.rabbitImages = await Promise.all(rabbitLoadPromises);
+      
+      // 加载道具图片到 Map
+      const itemResults = await Promise.all(itemLoadPromises);
+      itemResults.forEach(([itemType, img]) => {
+        this.itemImages.set(itemType, img);
+      });
+      
       this.isReady = true;
     } catch (e) {
-      console.error("Failed to load rabbit images", e);
+      console.error("Failed to load images", e);
     }
   }
 
@@ -244,7 +264,7 @@ export class Renderer {
   }
 
   drawGem(gem: Gem, isSelected: boolean) {
-    if (!this.isReady || !this.rabbitImages[gem.type]) return;
+    if (!this.isReady) return;
 
     const cx = gem.visualX * this.cellSize + this.cellSize / 2;
     const cy = gem.visualY * this.cellSize + this.cellSize / 2;
@@ -263,8 +283,24 @@ export class Renderer {
       this.ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
     }
 
+    // 如果是道具，绘制道具图片；否则绘制兔子图片
+    let img: HTMLImageElement | undefined;
+    if (gem.isItem && gem.itemType) {
+      img = this.itemImages.get(gem.itemType);
+      if (!img) {
+        console.warn(`Item image not found for type: ${gem.itemType}`);
+        this.ctx.restore();
+        return;
+      }
+    } else {
+      img = this.rabbitImages[gem.type];
+      if (!img) {
+        this.ctx.restore();
+        return;
+      }
+    }
+
     // Draw the image
-    const img = this.rabbitImages[gem.type];
     this.ctx.drawImage(
       img, 
       -size / 2, 
@@ -289,9 +325,9 @@ export class Renderer {
     this.ctx.restore();
   }
 
-  // 绘制正在拖拽的兔子（使用像素坐标，跟随鼠标）
+  // 绘制正在拖拽的兔子或道具（使用像素坐标，跟随鼠标）
   drawDraggingGem(gem: Gem, pixelX: number, pixelY: number) {
-    if (!this.isReady || !this.rabbitImages[gem.type]) return;
+    if (!this.isReady) return;
 
     const size = (this.cellSize - this.padding * 2) * 1.2; // 拖拽时稍微放大
 
@@ -303,8 +339,24 @@ export class Renderer {
     this.ctx.shadowBlur = 20;
     this.ctx.shadowColor = 'rgba(255, 255, 255, 0.6)';
 
-    // 绘制兔子图片
-    const img = this.rabbitImages[gem.type];
+    // 如果是道具，绘制道具图片；否则绘制兔子图片
+    let img: HTMLImageElement | undefined;
+    if (gem.isItem && gem.itemType) {
+      img = this.itemImages.get(gem.itemType);
+      if (!img) {
+        console.warn(`Item image not found for type: ${gem.itemType}`);
+        this.ctx.restore();
+        return;
+      }
+    } else {
+      img = this.rabbitImages[gem.type];
+      if (!img) {
+        this.ctx.restore();
+        return;
+      }
+    }
+
+    // 绘制图片
     this.ctx.drawImage(
       img, 
       -size / 2, 

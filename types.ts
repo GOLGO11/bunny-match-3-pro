@@ -10,6 +10,13 @@ export enum GemType {
   TYPE_7 = 7
 }
 
+// 道具类型枚举
+export enum ItemType {
+  CARROT = 'carrot',    // 胡萝卜
+  STRAWBERRY = 'strawberry', // 草莓
+  CHERRY_BLOSSOM = 'cherry_blossom' // 樱花
+}
+
 export interface Point {
   x: number;
   y: number;
@@ -25,6 +32,9 @@ export interface Gem {
   isMatched: boolean;
   alpha: number;
   scale: number;
+  // 道具相关属性
+  isItem: boolean;      // 是否为道具
+  itemType?: ItemType;  // 道具类型（如果是道具）
 }
 
 export enum GameStatus {

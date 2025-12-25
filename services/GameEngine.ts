@@ -1,5 +1,5 @@
 
-import { Gem, GemType, GameStatus } from '../types';
+import { Gem, GemType, GameStatus, ItemType } from '../types';
 import { GRID_SIZE, BASE_SCORE, MATCH_MIN_COUNT, Difficulty, DIFFICULTY_CONFIG, LevelConfig, getLevelByScore } from '../constants';
 
 export class GameEngine {
@@ -65,10 +65,21 @@ export class GameEngine {
   }
 
   private checkSpecificMatch(x: number, y: number): boolean {
-    const type = this.grid[y][x]?.type;
+    const gem = this.grid[y][x];
+    if (!gem || gem.isItem) return false; // 道具不参与初始匹配检查
+    const type = gem.type;
     if (type === undefined) return false;
-    if (x >= 2 && this.grid[y][x-1]?.type === type && this.grid[y][x-2]?.type === type) return true;
-    if (y >= 2 && this.grid[y-1][x]?.type === type && this.grid[y-2][x]?.type === type) return true;
+    // 检查时也要排除道具
+    if (x >= 2) {
+      const left1 = this.grid[y][x-1];
+      const left2 = this.grid[y][x-2];
+      if (left1 && !left1.isItem && left2 && !left2.isItem && left1.type === type && left2.type === type) return true;
+    }
+    if (y >= 2) {
+      const top1 = this.grid[y-1][x];
+      const top2 = this.grid[y-2][x];
+      if (top1 && !top1.isItem && top2 && !top2.isItem && top1.type === type && top2.type === type) return true;
+    }
     return false;
   }
 
@@ -83,43 +94,459 @@ export class GameEngine {
       visualY: y,
       isMatched: false,
       alpha: 1,
-      scale: 1
+      scale: 1,
+      isItem: false,
+      itemType: undefined
     };
+  }
+
+  // 创建道具
+  createItem(x: number, y: number, itemType?: ItemType): Gem {
+    // 如果没有指定道具类型，随机选择一个
+    const allItemTypes = Object.values(ItemType);
+    const finalItemType = itemType ?? allItemTypes[Math.floor(Math.random() * allItemTypes.length)];
+    
+    return {
+      id: Math.random().toString(36).substr(2, 9),
+      type: GemType.TYPE_0, // 道具使用默认类型（不会用于匹配）
+      gridX: x,
+      gridY: y,
+      visualX: x,
+      visualY: y,
+      isMatched: false,
+      alpha: 1,
+      scale: 1,
+      isItem: true,
+      itemType: finalItemType
+    };
+  }
+
+  // 检查两个宝石是否匹配（支持樱花作为万能牌）
+  private canMatch(gem1: Gem | null, gem2: Gem | null): boolean {
+    if (!gem1 || !gem2) return false;
+    
+    // 如果其中一个是樱花，可以匹配任何兔子
+    const isCherry1 = gem1.isItem && gem1.itemType === ItemType.CHERRY_BLOSSOM;
+    const isCherry2 = gem2.isItem && gem2.itemType === ItemType.CHERRY_BLOSSOM;
+    
+    if (isCherry1 || isCherry2) {
+      // 至少一个是樱花，另一个必须是兔子（非其他道具）
+      const otherGem = isCherry1 ? gem2 : gem1;
+      return !otherGem.isItem || otherGem.itemType === ItemType.CHERRY_BLOSSOM;
+    }
+    
+    // 普通匹配：两个都是兔子，且类型相同
+    return !gem1.isItem && !gem2.isItem && gem1.type === gem2.type;
+  }
+
+  // 检查新元素是否可以加入匹配序列（支持樱花作为万能牌）
+  private canAddToMatchSequence(sequence: (Gem | null)[], newGem: Gem | null): boolean {
+    if (!newGem) return false;
+    
+    // 过滤掉 null
+    const validSequence = sequence.filter(g => g !== null) as Gem[];
+    
+    // 如果新元素是其他道具（非樱花），不能匹配
+    if (newGem.isItem && newGem.itemType !== ItemType.CHERRY_BLOSSOM) {
+      return false;
+    }
+    
+    // 如果新元素是樱花，可以加入任何序列（万能牌）
+    const isCherry = newGem.isItem && newGem.itemType === ItemType.CHERRY_BLOSSOM;
+    if (isCherry) {
+      return true;
+    }
+    
+    // 如果新元素是兔子，需要检查是否与序列兼容
+    // 获取序列中所有兔子的类型（排除樱花和其他道具）
+    const rabbitTypes = new Set<GemType>();
+    for (const gem of validSequence) {
+      if (!gem.isItem) {
+        rabbitTypes.add(gem.type);
+      }
+    }
+    
+    // 如果序列中只有樱花，没有兔子，新兔子可以加入
+    if (rabbitTypes.size === 0) {
+      return true;
+    }
+    
+    // 如果序列中只有一种兔子类型，新兔子必须匹配该类型
+    if (rabbitTypes.size === 1) {
+      const baseType = Array.from(rabbitTypes)[0];
+      return newGem.type === baseType;
+    }
+    
+    // 如果序列中有多种不同的兔子类型
+    // 检查序列中是否有樱花（万能牌）
+    const hasCherry = validSequence.some(g => g.isItem && g.itemType === ItemType.CHERRY_BLOSSOM);
+    
+    if (hasCherry) {
+      // 如果有樱花，新兔子只要匹配序列中任意一种兔子类型，就可以通过樱花连接
+      // 例如：[灰兔子A, 樱花, 灰兔子B] 如果A和B是不同的类型，不能匹配
+      // 但 [灰兔子A, 樱花, 灰兔子A] 应该能匹配
+      // 实际上，如果有樱花，说明序列中可能有多种类型，我们允许新兔子匹配其中任意一种
+      return rabbitTypes.has(newGem.type);
+    }
+    
+    // 如果没有樱花，但序列中有多种兔子类型，这是不应该发生的情况
+    // 这表示序列构建逻辑有问题，但我们尝试容错
+    // 只允许新兔子匹配序列中的主要类型（出现次数最多的类型）
+    const typeCount = new Map<GemType, number>();
+    for (const gem of validSequence) {
+      if (!gem.isItem) {
+        typeCount.set(gem.type, (typeCount.get(gem.type) || 0) + 1);
+      }
+    }
+    
+    if (typeCount.size === 0) {
+      return true; // 没有兔子类型，只有樱花
+    }
+    
+    // 找到主要类型（出现次数最多的）
+    let maxCount = 0;
+    let mainType: GemType | null = null;
+    for (const [type, count] of typeCount) {
+      if (count > maxCount) {
+        maxCount = count;
+        mainType = type;
+      }
+    }
+    
+    // 如果新兔子匹配主要类型，可以加入
+    if (mainType !== null) {
+      return newGem.type === mainType;
+    }
+    
+    return false;
+  }
+
+  // 验证序列是否形成有效匹配（支持樱花作为万能牌）
+  private isValidMatchSequence(sequence: Gem[]): boolean {
+    if (sequence.length < MATCH_MIN_COUNT) return false;
+    
+    // 获取序列中所有兔子的类型（排除樱花和其他道具）
+    const rabbitTypes = new Set<GemType>();
+    const cherryCount = sequence.filter(g => g.isItem && g.itemType === ItemType.CHERRY_BLOSSOM).length;
+    const rabbitCount = sequence.filter(g => !g.isItem).length;
+    
+    for (const gem of sequence) {
+      if (!gem.isItem) {
+        rabbitTypes.add(gem.type);
+      }
+    }
+    
+    // 如果序列中只有樱花（没有兔子），可以形成匹配（至少3个樱花）
+    if (rabbitTypes.size === 0) {
+      return cherryCount >= MATCH_MIN_COUNT;
+    }
+    
+    // 如果序列中只有一种兔子类型，可以形成匹配（樱花可以作为该类型的替代）
+    // 例如：[黑眼圈兔子, 黑眼圈兔子, 樱花] 或 [黑眼圈兔子, 樱花, 黑眼圈兔子] 都应该能匹配
+    if (rabbitTypes.size === 1) {
+      return (rabbitCount + cherryCount) >= MATCH_MIN_COUNT;
+    }
+    
+    // 如果序列中有多种兔子类型
+    if (rabbitTypes.size > 1) {
+      // 如果没有樱花，且有多种兔子类型，不能匹配
+      if (cherryCount === 0) {
+        return false;
+      }
+      
+      // 有樱花，樱花可以作为万能牌
+      // 计算每种兔子类型的数量
+      const typeCount = new Map<GemType, number>();
+      for (const gem of sequence) {
+        if (!gem.isItem) {
+          typeCount.set(gem.type, (typeCount.get(gem.type) || 0) + 1);
+        }
+      }
+      
+      // 找到主要类型（出现次数最多的兔子类型）
+      let maxCount = 0;
+      for (const count of typeCount.values()) {
+        if (count > maxCount) {
+          maxCount = count;
+        }
+      }
+      
+      // 樱花可以作为主要类型的替代
+      // 如果主要类型数量 + 樱花数量 >= 3，可以形成匹配
+      // 例如：[黑眼圈兔子 x2, 樱花 x1] = 3个黑眼圈兔子，可以匹配
+      // 例如：[黑眼圈兔子 x1, 樱花 x1, 黑眼圈兔子 x1] = 3个黑眼圈兔子，可以匹配
+      return (maxCount + cherryCount) >= MATCH_MIN_COUNT;
+    }
+    
+    return false;
   }
 
   findMatches(): Gem[] {
     const matched = new Set<Gem>();
+    
     // Horizontal
     for (let y = 0; y < GRID_SIZE; y++) {
-      let tempMatch = [this.grid[y][0]];
-      for (let x = 1; x < GRID_SIZE; x++) {
+      let tempMatch: (Gem | null)[] = [];
+      // 过滤掉 null，从第一个非 null 元素开始
+      for (let x = 0; x < GRID_SIZE; x++) {
         const current = this.grid[y][x];
-        const last = tempMatch[tempMatch.length - 1];
-        if (current && last && current.type === last.type) {
+        
+        if (!current) {
+          // 遇到 null，检查并清空当前序列
+          if (tempMatch.length >= MATCH_MIN_COUNT) {
+            const validMatch = tempMatch.filter(g => g !== null) as Gem[];
+            if (this.isValidMatchSequence(validMatch)) {
+              tempMatch.forEach(g => {
+                if (g) {
+                  if (g.isItem && g.itemType === ItemType.CHERRY_BLOSSOM) {
+                    matched.add(g);
+                  } else if (!g.isItem) {
+                    matched.add(g);
+                  }
+                }
+              });
+            }
+          }
+          tempMatch = [];
+          continue;
+        }
+        
+        // 使用序列匹配逻辑（支持樱花）
+        if (tempMatch.length === 0 || this.canAddToMatchSequence(tempMatch, current)) {
           tempMatch.push(current);
         } else {
-          if (tempMatch.length >= MATCH_MIN_COUNT) tempMatch.forEach(g => g && matched.add(g));
+          // 检查当前序列是否满足匹配条件
+          if (tempMatch.length >= MATCH_MIN_COUNT) {
+            const validMatch = tempMatch.filter(g => g !== null) as Gem[];
+            if (this.isValidMatchSequence(validMatch)) {
+              tempMatch.forEach(g => {
+                if (g) {
+                  if (g.isItem && g.itemType === ItemType.CHERRY_BLOSSOM) {
+                    matched.add(g);
+                  } else if (!g.isItem) {
+                    matched.add(g);
+                  }
+                }
+              });
+            }
+          }
           tempMatch = [current];
         }
       }
-      if (tempMatch.length >= MATCH_MIN_COUNT) tempMatch.forEach(g => g && matched.add(g));
+      // 处理最后一个序列
+      if (tempMatch.length >= MATCH_MIN_COUNT) {
+        const validMatch = tempMatch.filter(g => g !== null) as Gem[];
+        if (this.isValidMatchSequence(validMatch)) {
+          tempMatch.forEach(g => {
+            if (g) {
+              if (g.isItem && g.itemType === ItemType.CHERRY_BLOSSOM) {
+                matched.add(g);
+              } else if (!g.isItem) {
+                matched.add(g);
+              }
+            }
+          });
+        }
+      }
     }
+    
     // Vertical
     for (let x = 0; x < GRID_SIZE; x++) {
-      let tempMatch = [this.grid[0][x]];
-      for (let y = 1; y < GRID_SIZE; y++) {
+      let tempMatch: (Gem | null)[] = [];
+      // 过滤掉 null，从第一个非 null 元素开始
+      for (let y = 0; y < GRID_SIZE; y++) {
         const current = this.grid[y][x];
-        const last = tempMatch[tempMatch.length - 1];
-        if (current && last && current.type === last.type) {
+        
+        if (!current) {
+          // 遇到 null，检查并清空当前序列
+          if (tempMatch.length >= MATCH_MIN_COUNT) {
+            const validMatch = tempMatch.filter(g => g !== null) as Gem[];
+            if (this.isValidMatchSequence(validMatch)) {
+              tempMatch.forEach(g => {
+                if (g) {
+                  if (g.isItem && g.itemType === ItemType.CHERRY_BLOSSOM) {
+                    matched.add(g);
+                  } else if (!g.isItem) {
+                    matched.add(g);
+                  }
+                }
+              });
+            }
+          }
+          tempMatch = [];
+          continue;
+        }
+        
+        // 使用序列匹配逻辑（支持樱花）
+        if (tempMatch.length === 0 || this.canAddToMatchSequence(tempMatch, current)) {
           tempMatch.push(current);
         } else {
-          if (tempMatch.length >= MATCH_MIN_COUNT) tempMatch.forEach(g => g && matched.add(g));
+          // 检查当前序列是否满足匹配条件
+          if (tempMatch.length >= MATCH_MIN_COUNT) {
+            const validMatch = tempMatch.filter(g => g !== null) as Gem[];
+            if (this.isValidMatchSequence(validMatch)) {
+              tempMatch.forEach(g => {
+                if (g) {
+                  if (g.isItem && g.itemType === ItemType.CHERRY_BLOSSOM) {
+                    matched.add(g);
+                  } else if (!g.isItem) {
+                    matched.add(g);
+                  }
+                }
+              });
+            }
+          }
           tempMatch = [current];
         }
       }
-      if (tempMatch.length >= MATCH_MIN_COUNT) tempMatch.forEach(g => g && matched.add(g));
+      // 处理最后一个序列
+      if (tempMatch.length >= MATCH_MIN_COUNT) {
+        const validMatch = tempMatch.filter(g => g !== null) as Gem[];
+        if (this.isValidMatchSequence(validMatch)) {
+          tempMatch.forEach(g => {
+            if (g) {
+              if (g.isItem && g.itemType === ItemType.CHERRY_BLOSSOM) {
+                matched.add(g);
+              } else if (!g.isItem) {
+                matched.add(g);
+              }
+            }
+          });
+        }
+      }
     }
+    
     return Array.from(matched);
+  }
+
+  // 激活道具
+  async activateItem(x: number, y: number): Promise<boolean> {
+    if (this.status !== GameStatus.IDLE) return false;
+    
+    const gem = this.grid[y][x];
+    if (!gem || !gem.isItem || !gem.itemType) return false;
+
+    // 第一次激活道具时启动计时器
+    if (!this.timerStarted) {
+      this.startTimer();
+    }
+
+    this.status = GameStatus.MATCHING;
+    
+    let gemsToRemove: Gem[] = [];
+    
+    switch (gem.itemType) {
+      case ItemType.CARROT:
+        // 胡萝卜：消除所在行
+        gemsToRemove = this.getCarrotMatches(x, y);
+        break;
+      case ItemType.STRAWBERRY:
+        // 草莓：消除3x3区域
+        gemsToRemove = this.getStrawberryMatches(x, y);
+        break;
+      case ItemType.CHERRY_BLOSSOM:
+        // 樱花：不作为激活道具使用，而是作为万能牌参与匹配
+        // 如果点击樱花，不做任何事（樱花通过匹配机制自动生效）
+        this.status = GameStatus.IDLE;
+        return false;
+    }
+    
+    if (gemsToRemove.length === 0) {
+      this.status = GameStatus.IDLE;
+      return false;
+    }
+    
+    // 标记为已匹配
+    gemsToRemove.forEach(g => {
+      if (g) g.isMatched = true;
+    });
+    
+    // 道具激活成功后，立即重置计时器（在消除的瞬间）
+    if (this.timerStarted) {
+      this.resetTimer();
+    }
+    
+    // 计算分数
+    const score = gemsToRemove.length * BASE_SCORE;
+    this.scoreCallback(score, 1);
+    
+    // 触发消除特效
+    if (this.matchCallback) {
+      this.matchCallback(gemsToRemove.filter(g => g !== null) as Gem[]);
+    }
+    
+    await this.sleep(450);
+    
+    // 移除匹配的宝石
+    for (let y = 0; y < GRID_SIZE; y++) {
+      for (let x = 0; x < GRID_SIZE; x++) {
+        if (this.grid[y][x]?.isMatched) {
+          this.grid[y][x] = null;
+        }
+      }
+    }
+    
+    // 应用重力
+    this.status = GameStatus.FALLING;
+    this.applyGravity();
+    await this.sleep(350);
+    
+    // 填充空位
+    this.status = GameStatus.REFILLING;
+    this.refill();
+    await this.sleep(400);
+    
+    // 检查连锁匹配
+    const newMatches = this.findMatches();
+    if (newMatches.length > 0) {
+      // 连锁匹配时，再次重置计时器
+      if (this.timerStarted) {
+        this.resetTimer();
+      }
+      await this.handleSequencing(newMatches);
+    } else {
+      this.status = GameStatus.IDLE;
+      // 消除完成后，检查是否还有可用的解法
+      if (!this.hasPossibleMoves()) {
+        if (this.noMovesCallback) {
+          this.noMovesCallback();
+        }
+      }
+    }
+    
+    return true;
+  }
+
+  // 获取胡萝卜要消除的宝石（所在行）
+  private getCarrotMatches(x: number, y: number): Gem[] {
+    const matches: Gem[] = [];
+    // 消除整个行
+    for (let colX = 0; colX < GRID_SIZE; colX++) {
+      const gem = this.grid[y][colX];
+      if (gem) {
+        matches.push(gem);
+      }
+    }
+    return matches;
+  }
+
+  // 获取草莓要消除的宝石（3x3区域）
+  private getStrawberryMatches(x: number, y: number): Gem[] {
+    const matches: Gem[] = [];
+    // 消除以(x,y)为中心的3x3区域
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const newX = x + dx;
+        const newY = y + dy;
+        if (newX >= 0 && newX < GRID_SIZE && newY >= 0 && newY < GRID_SIZE) {
+          const gem = this.grid[newY][newX];
+          if (gem) {
+            matches.push(gem);
+          }
+        }
+      }
+    }
+    return matches;
   }
 
   async swapGems(p1: {x: number, y: number}, p2: {x: number, y: number}) {
@@ -265,12 +692,17 @@ export class GameEngine {
   }
 
   private refill() {
+    // 道具生成概率（10% 的概率生成道具）
+    const ITEM_SPAWN_CHANCE = 0.1;
+    
     for (let x = 0; x < GRID_SIZE; x++) {
       let missingCount = 0;
       for (let y = GRID_SIZE - 1; y >= 0; y--) {
         if (this.grid[y][x] === null) {
           missingCount++;
-          const gem = this.createGem(x, y);
+          // 随机决定是生成道具还是兔子
+          const shouldSpawnItem = Math.random() < ITEM_SPAWN_CHANCE;
+          const gem = shouldSpawnItem ? this.createItem(x, y) : this.createGem(x, y);
           gem.visualX = x;
           gem.visualY = -missingCount - 0.5;
           this.grid[y][x] = gem;

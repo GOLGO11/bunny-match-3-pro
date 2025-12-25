@@ -1,27 +1,21 @@
 
 import React, { useState, useEffect } from 'react';
-import { Difficulty, DIFFICULTY_CONFIG } from '../constants';
+import { Difficulty } from '../constants';
 import { useTranslation } from '../i18n/useTranslation';
 
 interface UIOverlayProps {
   state: 'start' | 'loading' | 'playing' | 'gameover' | 'noMoves';
   score: number;
-  onStart: (difficulty?: Difficulty) => void;
+  onStart: () => void;
   onRestart: () => void;
   onRewardedAd: () => void;
   currentDifficulty?: Difficulty;
 }
 
-export const UIOverlay: React.FC<UIOverlayProps> = ({ state, score, onStart, onRestart, onRewardedAd, currentDifficulty = Difficulty.MEDIUM }) => {
+export const UIOverlay: React.FC<UIOverlayProps> = ({ state, score, onStart, onRestart, onRewardedAd, currentDifficulty = Difficulty.HARD }) => {
   const { t } = useTranslation();
-  const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>(currentDifficulty);
   const [isLandscape, setIsLandscape] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  
-  // 当currentDifficulty改变时更新selectedDifficulty
-  useEffect(() => {
-    setSelectedDifficulty(currentDifficulty);
-  }, [currentDifficulty]);
 
   // 检测横屏/竖屏和设备类型
   useEffect(() => {
@@ -89,41 +83,14 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({ state, score, onStart, onR
           </div>
           
           <div className="w-full space-y-3 sm:space-y-4 relative z-10">
-            {/* 难度选择 */}
-            <div className="mb-2.5 sm:mb-3">
-              <p className="text-pink-200 text-[10px] sm:text-xs font-semibold mb-1.5 sm:mb-2 text-center">{t.startScreen.selectDifficulty}</p>
-              <div className="grid grid-cols-3 gap-1 sm:gap-1.5">
-                {Object.values(Difficulty).map((diff) => {
-                  const config = DIFFICULTY_CONFIG[diff];
-                  const isSelected = selectedDifficulty === diff;
-                  const diffKey = diff as keyof typeof t.difficulty;
-                  return (
-                    <button
-                      key={diff}
-                      onClick={() => setSelectedDifficulty(diff)}
-                      className={`py-1.5 sm:py-2 px-1 rounded-lg sm:rounded-xl transition-all transform ${
-                        isSelected
-                          ? 'bg-gradient-to-r from-pink-400 to-purple-500 text-white scale-105 shadow-lg border-2 border-pink-300'
-                          : 'bg-pink-500/20 border border-pink-400/30 text-pink-200 hover:bg-pink-500/30 hover:scale-102'
-                      }`}
-                    >
-                      <div className="text-lg sm:text-xl mb-0.5">{config.icon}</div>
-                      <div className="text-[9px] sm:text-[10px] font-bold leading-tight">{t.difficulty[diffKey].name}</div>
-                      <div className="text-[8px] sm:text-[9px] opacity-80 mt-0.5 leading-tight line-clamp-2">{t.difficulty[diffKey].description}</div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-            
-            {/* 主按钮 - 更可爱 */}
+            {/* START 按钮 */}
             <button 
-              onClick={() => onStart(selectedDifficulty)}
+              onClick={() => onStart()}
               className="w-full py-3 sm:py-4 bg-gradient-to-r from-pink-400 via-purple-500 to-pink-400 hover:from-pink-500 hover:via-purple-600 hover:to-pink-500 text-white font-bold text-base sm:text-lg rounded-xl transition-all active:scale-95 shadow-lg transform hover:scale-105 relative overflow-hidden group"
             >
               <span className="relative z-10 flex items-center justify-center gap-2">
                 <span className="text-lg sm:text-xl animate-bounce inline-block">🎮</span>
-                <span className="whitespace-nowrap">{t.startScreen.startGame}</span>
+                <span className="whitespace-nowrap">START</span>
                 <span className="text-lg sm:text-xl animate-bounce inline-block" style={{ animationDelay: '0.1s' }}>✨</span>
               </span>
               {/* 按钮光效 */}
