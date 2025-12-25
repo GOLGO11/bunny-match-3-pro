@@ -35,6 +35,7 @@ export default {
   game: {
     score: "スコア",
     combo: "コンボ",
+    level: "レベル",
     loadingRabbits: "うさぎを読み込み中...",
     timeRemaining: "秒"
   },

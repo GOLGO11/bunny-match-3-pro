@@ -35,6 +35,7 @@ export default {
   game: {
     score: "Punteggio",
     combo: "Combo",
+    level: "Livello",
     loadingRabbits: "Caricamento Conigli...",
     timeRemaining: "s"
   },

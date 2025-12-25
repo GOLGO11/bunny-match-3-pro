@@ -35,6 +35,7 @@ export default {
   game: {
     score: "Счет",
     combo: "Комбо",
+    level: "Уровень",
     loadingRabbits: "Загрузка Кроликов...",
     timeRemaining: "с"
   },

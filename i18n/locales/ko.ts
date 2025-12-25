@@ -35,6 +35,7 @@ export default {
   game: {
     score: "점수",
     combo: "콤보",
+    level: "레벨",
     loadingRabbits: "토끼 로딩 중...",
     timeRemaining: "초"
   },

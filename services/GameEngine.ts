@@ -1,6 +1,6 @@
 
 import { Gem, GemType, GameStatus } from '../types';
-import { GRID_SIZE, BASE_SCORE, MATCH_MIN_COUNT, Difficulty, DIFFICULTY_CONFIG } from '../constants';
+import { GRID_SIZE, BASE_SCORE, MATCH_MIN_COUNT, Difficulty, DIFFICULTY_CONFIG, LevelConfig, getLevelByScore } from '../constants';
 
 export class GameEngine {
   grid: (Gem | null)[][] = [];
@@ -13,10 +13,14 @@ export class GameEngine {
   difficulty: Difficulty;
   gemTypeCount: number; // 当前难度使用的兔子类型数量
   
+  // 关卡系统
+  private currentScore: number = 0; // 当前累计分数
+  private currentLevel: LevelConfig; // 当前关卡配置
+  levelChangeCallback?: (oldLevel: number, newLevel: number, levelConfig: LevelConfig) => void; // 关卡切换回调
+  
   // 计时器相关（所有难度）
   private timerInterval: number | null = null;
-  private timeRemaining: number = 20; // 20秒倒计时
-  private readonly TIME_LIMIT = 20; // 20秒限制
+  private timeRemaining: number = 20; // 当前剩余时间
   private timerStarted: boolean = false; // 计时器是否已启动
   private timerPaused: boolean = false; // 计时器是否已暂停
   
@@ -33,6 +37,9 @@ export class GameEngine {
     this.timeUpCallback = onTimeUp;
     this.difficulty = difficulty;
     this.gemTypeCount = DIFFICULTY_CONFIG[difficulty].gemTypeCount;
+    this.currentScore = 0;
+    this.currentLevel = getLevelByScore(0); // 初始为第一关
+    this.timeRemaining = this.currentLevel.timeLimit;
     this.initGrid();
     // 计时器在第一次交换后才启动
   }
@@ -151,6 +158,39 @@ export class GameEngine {
     } catch (e) {
       this.status = GameStatus.IDLE;
     }
+  }
+
+  // 更新分数并检测关卡切换（从外部调用，传入当前总分数）
+  updateScore(totalScore: number) {
+    const oldLevel = this.currentLevel.level;
+    this.currentScore = totalScore;
+    const newLevelConfig = getLevelByScore(totalScore);
+    
+    // 检测关卡是否切换
+    if (newLevelConfig.level !== this.currentLevel.level) {
+      const oldLevelNum = this.currentLevel.level;
+      this.currentLevel = newLevelConfig;
+      
+      // 如果计时器已启动，重置为新的时间限制
+      if (this.timerStarted) {
+        this.resetTimer();
+      }
+      
+      // 触发关卡切换回调
+      if (this.levelChangeCallback) {
+        this.levelChangeCallback(oldLevelNum, newLevelConfig.level, newLevelConfig);
+      }
+    }
+  }
+
+  // 获取当前关卡信息
+  getCurrentLevel(): LevelConfig {
+    return this.currentLevel;
+  }
+
+  // 获取当前关卡编号
+  getCurrentLevelNumber(): number {
+    return this.currentLevel.level;
   }
 
   private async handleSequencing(initialMatches: Gem[]) {
@@ -306,23 +346,42 @@ export class GameEngine {
 
   // 计时器相关方法（所有难度）
   private startTimer(): void {
-    if (this.timerStarted) return;
+    if (this.timerStarted) {
+      console.log(`[GameEngine] Timer already started, skipping`);
+      return;
+    }
+    console.log(`[GameEngine] Starting timer with timeLimit: ${this.currentLevel.timeLimit}`);
     this.timerStarted = true;
-    this.timeRemaining = this.TIME_LIMIT;
+    // 确保计时器未被暂停
+    this.timerPaused = false;
+    // 使用当前关卡的时间限制
+    this.timeRemaining = this.currentLevel.timeLimit;
     
     // 清除可能存在的旧计时器
     if (this.timerInterval !== null) {
       clearInterval(this.timerInterval);
+      this.timerInterval = null;
     }
     
-    this.timerInterval = window.setInterval(() => {
+    console.log(`[GameEngine] Creating interval, timerPaused: ${this.timerPaused}, timeRemaining: ${this.timeRemaining}`);
+    
+    // 使用箭头函数确保 this 上下文正确
+    const timerCallback = () => {
+      console.log(`[GameEngine] Interval callback fired! timerPaused: ${this.timerPaused}, timeRemaining: ${this.timeRemaining}`);
+      
       // 如果暂停，不减少时间
-      if (this.timerPaused) return;
+      if (this.timerPaused) {
+        console.log(`[GameEngine] Timer is paused, skipping`);
+        return;
+      }
       
       if (this.timeRemaining > 0) {
         this.timeRemaining -= 1;
+        // 调试：输出时间减少
+        console.log(`[GameEngine] Time remaining: ${this.timeRemaining}`);
       }
       if (this.timeRemaining <= 0) {
+        console.log(`[GameEngine] Time's up!`);
         this.stopTimer();
         // 确保只调用一次回调
         if (this.timeUpCallback) {
@@ -331,19 +390,34 @@ export class GameEngine {
           callback();
         }
       }
-    }, 1000);
+    };
+    
+    this.timerInterval = window.setInterval(timerCallback, 1000);
+    console.log(`[GameEngine] Timer interval created: ${this.timerInterval}`);
+    
+    // 立即测试一次回调，确保它能执行
+    console.log(`[GameEngine] Testing callback immediately...`);
+    setTimeout(() => {
+      console.log(`[GameEngine] After 1 second, checking if callback was called...`);
+      console.log(`[GameEngine] Current timeRemaining: ${this.timeRemaining}, timerInterval: ${this.timerInterval}`);
+    }, 1100);
   }
 
   private resetTimer(): void {
     if (!this.timerStarted) return;
-    this.timeRemaining = this.TIME_LIMIT;
+    // 重置为当前关卡的时间限制
+    this.timeRemaining = this.currentLevel.timeLimit;
   }
 
   private stopTimer(): void {
+    console.log(`[GameEngine] stopTimer called, timerInterval: ${this.timerInterval}`);
     if (this.timerInterval !== null) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
+      console.log(`[GameEngine] Timer interval cleared`);
     }
+    // 注意：不重置 timerStarted，这样 UI 可以继续显示时间（即使为0）
+    // 只有在 destroy() 时才重置 timerStarted
   }
 
   // 获取剩余时间（用于显示）
@@ -374,8 +448,12 @@ export class GameEngine {
 
   // 清理资源
   destroy(): void {
+    console.log(`[GameEngine] destroy() called, timerInterval: ${this.timerInterval}`);
     this.stopTimer();
     this.timerStarted = false;
     this.timerPaused = false;
+    this.currentScore = 0;
+    this.currentLevel = getLevelByScore(0);
+    console.log(`[GameEngine] destroy() completed`);
   }
 }

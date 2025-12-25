@@ -14,6 +14,32 @@ export const GEM_COLORS = [
 export const BASE_SCORE = 100;
 export const MATCH_MIN_COUNT = 3;
 
+// 关卡配置（基于分数）
+export interface LevelConfig {
+  level: number;           // 关卡编号（1-4）
+  minScore: number;        // 最低分数（包含）
+  maxScore: number | null; // 最高分数（null表示无上限）
+  timeLimit: number;       // 倒计时时间（秒）
+}
+
+export const LEVEL_CONFIGS: LevelConfig[] = [
+  { level: 1, minScore: 0, maxScore: 300000, timeLimit: 25 },      // 第一关：0-30万分，25秒
+  { level: 2, minScore: 300000, maxScore: 600000, timeLimit: 15 },  // 第二关：30-60万分，15秒
+  { level: 3, minScore: 600000, maxScore: 900000, timeLimit: 8 },    // 第三关：60-90万分，8秒
+  { level: 4, minScore: 900000, maxScore: null, timeLimit: 5 },     // 第四关：90万分以上，5秒
+];
+
+// 根据分数获取当前关卡配置
+export function getLevelByScore(score: number): LevelConfig {
+  for (const config of LEVEL_CONFIGS) {
+    if (score >= config.minScore && (config.maxScore === null || score < config.maxScore)) {
+      return config;
+    }
+  }
+  // 如果分数超出所有关卡，返回最后一关
+  return LEVEL_CONFIGS[LEVEL_CONFIGS.length - 1];
+}
+
 // 难度配置
 export enum Difficulty {
   EASY = 'easy',      // 简单：使用4种兔子类型

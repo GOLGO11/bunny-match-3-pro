@@ -40,6 +40,7 @@ export default {
   game: {
     score: "Score",
     combo: "Combo",
+    level: "Level",
     loadingRabbits: "Loading Rabbits...",
     timeRemaining: "s"
   },

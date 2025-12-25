@@ -35,6 +35,7 @@ export default {
   game: {
     score: "Punkte",
     combo: "Combo",
+    level: "Level",
     loadingRabbits: "Lade Hasen...",
     timeRemaining: "s"
   },

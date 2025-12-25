@@ -35,6 +35,7 @@ export default {
   game: {
     score: "得分",
     combo: "连击",
+    level: "关卡",
     loadingRabbits: "加载兔子中...",
     timeRemaining: "秒"
   },

@@ -6,7 +6,7 @@ import { SettingsPanel } from './components/SettingsPanel';
 import { LandscapePrompt } from './components/LandscapePrompt';
 import { AdsManager } from './services/AdsManager';
 import { AudioManager } from './services/AudioManager';
-import { Difficulty } from './constants';
+import { Difficulty, LevelConfig, getLevelByScore } from './constants';
 import { useTranslation } from './i18n/useTranslation';
 import { getAssetPath } from './utils/paths';
 import { requestFullscreen, lockOrientation } from './utils/fullscreen';
@@ -18,7 +18,18 @@ const App: React.FC = () => {
   const [gameState, setGameState] = useState<'start' | 'loading' | 'playing' | 'gameover' | 'noMoves'>('start');
   const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.MEDIUM);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  
+  // 时间更新回调
+  const handleTimeUpdate = useCallback((time: number | null) => {
+    // 调试：输出时间更新
+    if (time !== null) {
+      console.log(`[App] Time updated: ${time}`);
+    }
+    // 直接更新，React 会自动处理相同值的优化
+    setTimeRemaining(time);
+  }, []);
   const [isPaused, setIsPaused] = useState(false);
+  const [currentLevel, setCurrentLevel] = useState(1); // 当前关卡编号
   const adsManager = useRef(new AdsManager());
   const audioManager = useRef(new AudioManager());
 
@@ -124,10 +135,18 @@ const App: React.FC = () => {
     setScore(0);
     setCombo(0);
     setTimeRemaining(null);
+    setCurrentLevel(1); // 重置关卡
     // 恢复背景音乐
     audioManager.current.resumeBackgroundMusic();
     setGameState('playing');
   };
+
+  // 关卡切换回调
+  const handleLevelChange = useCallback((oldLevel: number, newLevel: number, levelConfig: LevelConfig) => {
+    setCurrentLevel(newLevel);
+    console.log(`[Level] 关卡切换: ${oldLevel} -> ${newLevel}, 时间限制: ${levelConfig.timeLimit}秒`);
+    // 这里可以添加关卡切换提示（后续功能）
+  }, []);
 
   const handleRequestReward = async () => {
     const success = await adsManager.current.showRewardedAd();
@@ -258,25 +277,45 @@ const App: React.FC = () => {
             </div>
             
             {/* 血条倒计时 - 中间 */}
-            {timeRemaining !== null ? (
-              <div className="flex flex-col items-center w-full max-w-[200px] flex-shrink-0">
-                {/* 血条容器 */}
-                <div className="w-full h-4 sm:h-5 md:h-6 bg-slate-700/80 rounded-full border border-slate-600 shadow-lg overflow-hidden backdrop-blur-sm">
-                  {/* 血条填充 */}
-                  <div 
-                    className={`h-full transition-all duration-300 ease-linear rounded-full ${
-                      timeRemaining <= 5 ? 'bg-gradient-to-r from-red-600 to-red-500 animate-pulse' : 
-                      timeRemaining <= 10 ? 'bg-gradient-to-r from-orange-500 to-orange-400' : 
-                      'bg-gradient-to-r from-green-500 to-green-400'
-                    }`}
-                    style={{ width: `${(timeRemaining / 20) * 100}%` }}
-                  >
-                    {/* 血条内部光效 */}
-                    <div className="h-full w-full bg-gradient-to-t from-transparent via-white/20 to-transparent"></div>
+            {timeRemaining !== null ? (() => {
+              const levelConfig = getLevelByScore(score);
+              const timeLimit = levelConfig.timeLimit;
+              // 确保 timeRemaining 和 timeLimit 都是有效数字
+              const percentage = timeLimit > 0 ? Math.max(0, Math.min(100, (timeRemaining / timeLimit) * 100)) : 0;
+              // 调试：输出血条宽度计算
+              console.log(`[App] Render: timeRemaining=${timeRemaining}, timeLimit=${timeLimit}, percentage=${percentage}%`);
+              return (
+                <div className="flex flex-col items-center w-full max-w-[200px] flex-shrink-0 gap-1">
+                  {/* 关卡显示 */}
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[9px] sm:text-[10px] cute-label text-purple-300 uppercase tracking-wider drop-shadow-lg">
+                      {t.game.level || 'Level'}
+                    </span>
+                    <span className="text-base sm:text-lg md:text-xl cute-number text-purple-200 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] font-bold">
+                      {currentLevel}
+                    </span>
+                  </div>
+                  {/* 血条容器 */}
+                  <div className="w-full h-4 sm:h-5 md:h-6 bg-slate-700/80 rounded-full border border-slate-600 shadow-lg overflow-hidden backdrop-blur-sm">
+                    {/* 血条填充 */}
+                    <div 
+                      className={`h-full transition-all duration-300 ease-linear rounded-full ${
+                        timeRemaining <= timeLimit * 0.2 ? 'bg-gradient-to-r from-red-600 to-red-500 animate-pulse' : 
+                        timeRemaining <= timeLimit * 0.5 ? 'bg-gradient-to-r from-orange-500 to-orange-400' : 
+                        'bg-gradient-to-r from-green-500 to-green-400'
+                      }`}
+                      style={{ 
+                        width: `${percentage}%`,
+                        transition: 'width 0.3s linear'
+                      }}
+                    >
+                      {/* 血条内部光效 */}
+                      <div className="h-full w-full bg-gradient-to-t from-transparent via-white/20 to-transparent"></div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ) : null}
+              );
+            })() : null}
             
             {/* 连击 - 右侧 */}
             <div className="flex flex-col items-end min-w-0">
@@ -306,7 +345,9 @@ const App: React.FC = () => {
               onGameOver={handleGameOver}
               onNoMoves={handleNoMoves}
               onTimeUp={handleTimeUp}
-              onTimeUpdate={setTimeRemaining}
+              onTimeUpdate={handleTimeUpdate}
+              onLevelChange={handleLevelChange}
+              currentScore={score}
               difficulty={difficulty}
               isPaused={isPaused}
             />

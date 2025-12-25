@@ -15,11 +15,13 @@ interface GameBoardProps {
   onNoMoves: () => void;
   onTimeUp?: () => void;
   onTimeUpdate?: (time: number | null) => void;
+  onLevelChange?: (oldLevel: number, newLevel: number, levelConfig: any) => void; // 关卡切换回调
+  currentScore?: number; // 当前累计分数
   difficulty: Difficulty;
   isPaused?: boolean;
 }
 
-export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver, onNoMoves, onTimeUp, onTimeUpdate, difficulty, isPaused = false }) => {
+export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver, onNoMoves, onTimeUp, onTimeUpdate, onLevelChange, currentScore = 0, difficulty, isPaused = false }) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
@@ -39,6 +41,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver,
   timeUpRef.current = onTimeUp;
   const timeUpdateRef = useRef(onTimeUpdate);
   timeUpdateRef.current = onTimeUpdate;
+  const levelChangeRef = useRef(onLevelChange);
+  levelChangeRef.current = onLevelChange;
+  const currentScoreRef = useRef(currentScore);
+  currentScoreRef.current = currentScore;
   const isPausedRef = useRef(isPaused);
   isPausedRef.current = isPaused;
 
@@ -94,6 +100,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver,
           },
           difficulty
         );
+        
+        // 设置关卡切换回调
+        if (engineRef.current) {
+          engineRef.current.levelChangeCallback = (oldLevel, newLevel, levelConfig) => {
+            if (levelChangeRef.current) {
+              levelChangeRef.current(oldLevel, newLevel, levelConfig);
+            }
+          };
+        }
         
         // 初始化倒计时显示（初始为null，等待第一次交换）
         // 计时器在第一次交换后才启动，所以初始时不显示
@@ -175,29 +190,47 @@ export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver,
       handleResize();
 
       // 更新倒计时显示（所有难度）
+      let lastTimerStarted = false;
+      let lastReportedTime: number | null = null;
       const updateTimer = () => {
         // 使用最新的引擎引用
         const currentEngine = engineRef.current;
         if (currentEngine) {
+          const isStarted = currentEngine.isTimerStarted();
           const remaining = currentEngine.getTimeRemaining();
+          
           // 如果计时器已启动，更新剩余时间
           // 即使时间到了（remaining === 0），也显示0，直到游戏状态改变
-          if (currentEngine.isTimerStarted()) {
+          if (isStarted) {
+            // 每次都更新，确保 React 能检测到变化
+            // 即使值相同，也更新一次，确保状态同步
             if (timeUpdateRef.current) {
+              // 调试：输出时间变化
+              if (lastReportedTime !== remaining) {
+                console.log(`[GameBoard] Time changed: ${lastReportedTime} -> ${remaining}`);
+              }
               timeUpdateRef.current(remaining);
             }
-          } else {
-            if (timeUpdateRef.current) {
-              timeUpdateRef.current(null);
-            }
+            lastReportedTime = remaining;
+            lastTimerStarted = true;
           }
-        } else {
-          if (timeUpdateRef.current) {
-            timeUpdateRef.current(null);
-          }
+          // 注意：如果计时器未启动，不更新（保持上一次的值，这样血条不会消失）
         }
       };
+      // 使用更频繁的更新间隔，确保能及时反映时间变化
+      // 计时器每秒减少1，我们每100ms检查一次，确保能及时更新
       const timerUpdateInterval = setInterval(updateTimer, 100);
+      // 立即执行一次，确保初始状态正确
+      updateTimer();
+      
+      // 更新分数到引擎（用于关卡计算）
+      const updateScoreToEngine = () => {
+        if (engineRef.current) {
+          engineRef.current.updateScore(currentScoreRef.current);
+        }
+      };
+      updateScoreToEngine();
+      const scoreUpdateInterval = setInterval(updateScoreToEngine, 100);
 
       let animationId: number;
       let lastTime = performance.now();
@@ -276,6 +309,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver,
         if (timerUpdateInterval) {
           clearInterval(timerUpdateInterval);
         }
+        if (scoreUpdateInterval) {
+          clearInterval(scoreUpdateInterval);
+        }
         if (engineRef.current) {
           engineRef.current.destroy();
         }
@@ -290,7 +326,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver,
     return () => {
        cleanup.then(unsub => unsub?.());
     };
-  }, [difficulty]);
+  }, [difficulty]); // 移除 currentScore 依赖，避免重复创建 GameEngine
 
   // 监听暂停状态变化，控制计时器
   useEffect(() => {

@@ -35,6 +35,7 @@ export default {
   game: {
     score: "Score",
     combo: "Combo",
+    level: "Niveau",
     loadingRabbits: "Chargement des Lapins...",
     timeRemaining: "s"
   },
