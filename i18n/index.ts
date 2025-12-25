@@ -44,11 +44,7 @@ export function getTranslation(lang: Language) {
 export function detectLanguage(): Language {
   if (typeof window === 'undefined') return 'en';
   
-  // 从 localStorage 读取
-  const saved = localStorage.getItem('game-language') as Language;
-  if (saved && saved in translations) return saved;
-  
-  // 从浏览器语言检测
+  // 自动检测浏览器系统语言
   const browserLang = navigator.language.toLowerCase();
   const langCode = browserLang.split('-')[0] as Language;
   
@@ -59,8 +55,7 @@ export function detectLanguage(): Language {
 }
 
 export function setLanguage(lang: Language) {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('game-language', lang);
-  }
+  // 不再保存到localStorage，仅检测系统语言
+  // 这个方法保留是为了兼容性，但不再执行任何操作
 }
 

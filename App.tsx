@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GameBoard } from './components/GameBoard';
 import { UIOverlay } from './components/UIOverlay';
-import { LanguageSelector } from './components/LanguageSelector';
 import { SettingsPanel } from './components/SettingsPanel';
 import { LandscapePrompt } from './components/LandscapePrompt';
 import { AdsManager } from './services/AdsManager';
@@ -187,7 +186,7 @@ const App: React.FC = () => {
       />
       
       <div className={`main-game-container relative z-10 w-full h-full flex flex-col p-1 sm:p-2 md:p-4 box-border ${
-        isGamePlaying ? 'max-w-5xl' : 'max-w-md'
+        isGamePlaying ? 'max-w-5xl mx-auto' : 'max-w-md mx-auto'
       }`}>
         {gameState !== 'start' && (
           <header className="game-header grid grid-cols-3 items-center mb-2 sm:mb-4 px-2 sm:px-4 py-1 sm:py-2 gap-2 sm:gap-4 bg-slate-900/20 backdrop-blur-sm rounded-lg border border-slate-700/30">
@@ -275,10 +274,6 @@ const App: React.FC = () => {
             currentDifficulty={difficulty}
           />
         </div>
-
-        
-        {/* 语言选择器 */}
-        <LanguageSelector />
       </div>
     </div>
   );
