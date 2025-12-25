@@ -189,7 +189,7 @@ const App: React.FC = () => {
         isGamePlaying ? 'max-w-5xl mx-auto' : 'max-w-md mx-auto'
       }`}>
         {gameState !== 'start' && (
-          <header className="game-header grid grid-cols-3 items-center mb-2 sm:mb-4 px-2 sm:px-4 py-1 sm:py-2 gap-2 sm:gap-4 bg-slate-900/20 backdrop-blur-sm rounded-lg border border-slate-700/30">
+          <header className="game-header flex items-center justify-center mb-2 sm:mb-4 px-2 sm:px-4 py-1 sm:py-2 gap-3 sm:gap-4 md:gap-6 bg-slate-900/20 backdrop-blur-sm rounded-lg border border-slate-700/30">
             {/* 得分 - 左侧 */}
             <div className="flex flex-col min-w-0">
               <span className="text-[10px] sm:text-xs cute-label text-pink-300 uppercase tracking-widest drop-shadow-lg">{t.game.score}</span>
@@ -200,7 +200,7 @@ const App: React.FC = () => {
             
             {/* 血条倒计时 - 中间 */}
             {timeRemaining !== null ? (
-              <div className="flex flex-col items-center gap-1 justify-self-center w-full max-w-[200px]">
+              <div className="flex flex-col items-center gap-1 w-full max-w-[200px] flex-shrink-0">
                 {/* 血条容器 */}
                 <div className="w-full h-4 sm:h-5 md:h-6 bg-slate-700/80 rounded-full border border-slate-600 shadow-lg overflow-hidden backdrop-blur-sm">
                   {/* 血条填充 */}
@@ -227,9 +227,7 @@ const App: React.FC = () => {
                   </span>
                 </div>
               </div>
-            ) : (
-              <div className="flex-1"></div>
-            )}
+            ) : null}
             
             {/* 连击 - 右侧 */}
             <div className="flex flex-col items-end min-w-0">
