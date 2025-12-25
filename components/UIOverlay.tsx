@@ -241,17 +241,9 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({ state, score, onStart, onR
               <div className="text-2xl animate-float" style={{ animationDelay: '0.4s' }}>🐰</div>
             </div>
             
-            <h1 className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-500 to-blue-400 mb-1.5 animate-pulse text-center">
+            <h1 className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-500 to-blue-400 mb-3 animate-pulse text-center">
               {t.noMoves.title}
             </h1>
-            <div className="text-xs text-pink-200 mb-2 text-center">{t.noMoves.gameOver}</div>
-            
-            {/* 提示文字 - 简化 */}
-            <div className="bg-pink-500/20 border border-pink-400/30 rounded-xl p-2.5 mb-3 backdrop-blur-sm w-full">
-              <p className="text-pink-100 text-[10px] text-center leading-relaxed">
-                {t.noMoves.message.split('\n')[0]}
-              </p>
-            </div>
             
             {/* 按钮 */}
             <button 
