@@ -152,7 +152,19 @@ export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver,
       const handleResize = () => {
         const parent = canvas.parentElement;
         if (!parent) return;
-        const size = Math.min(parent.clientWidth, parent.clientHeight);
+        
+        // 横屏时优先使用宽度，竖屏时使用较小值
+        const isLandscape = window.innerWidth > window.innerHeight;
+        const padding = isLandscape ? 8 : 16; // 横屏时减少 padding
+        const availableWidth = parent.clientWidth - padding * 2;
+        const availableHeight = parent.clientHeight - padding * 2;
+        
+        // 横屏时：使用宽度的90%，但不超过高度的95%
+        // 竖屏时：使用较小值
+        const size = isLandscape 
+          ? Math.min(availableWidth * 0.9, availableHeight * 0.95)
+          : Math.min(availableWidth, availableHeight * 0.9);
+        
         canvas.width = size;
         canvas.height = size;
         renderer.resize(size, size);
@@ -292,7 +304,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ onScoreUpdate, onGameOver,
   }, [isPaused]);
 
   return (
-    <div className="w-full h-full flex items-center justify-center p-2 bg-transparent rounded-xl relative">
+    <div className="w-full h-full flex items-center justify-center p-1 sm:p-2 bg-transparent rounded-xl relative min-h-0">
       {!isAssetsLoaded && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/60 backdrop-blur-sm z-10 rounded-xl">
            <div className="w-10 h-10 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mb-2"></div>
