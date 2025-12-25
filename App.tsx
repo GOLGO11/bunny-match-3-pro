@@ -189,7 +189,7 @@ const App: React.FC = () => {
         isGamePlaying ? 'max-w-5xl mx-auto' : 'max-w-md mx-auto'
       }`}>
         {gameState !== 'start' && (
-          <header className="game-header flex items-center justify-center mb-2 sm:mb-4 px-2 sm:px-4 py-1 sm:py-2 gap-3 sm:gap-4 md:gap-6 bg-slate-900/20 backdrop-blur-sm rounded-lg border border-slate-700/30">
+          <header className="game-header flex items-center justify-center mb-2 sm:mb-4 px-2 sm:px-4 py-1 sm:py-2 gap-3 sm:gap-4 md:gap-6 bg-transparent rounded-lg">
             {/* 得分 - 左侧 */}
             <div className="flex flex-col min-w-0">
               <span className="text-[10px] sm:text-xs cute-label text-pink-300 uppercase tracking-widest drop-shadow-lg">{t.game.score}</span>
