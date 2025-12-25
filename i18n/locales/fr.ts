@@ -59,6 +59,29 @@ export default {
   
   buttons: {
     freeReward: "Récompense Gratuite"
+  },
+  
+  settings: {
+    music: "Musique",
+    musicOn: "Musique: Activée",
+    musicOff: "Musique: Désactivée",
+    sound: "Son",
+    soundOn: "Son: Activé",
+    soundOff: "Son: Désactivé",
+    pause: "Pause",
+    resume: "Reprendre"
+  },
+  
+  landscape: {
+    title: "Veuillez Pivoter en Mode Paysage",
+    message: "Pour la meilleure expérience de jeu, veuillez pivoter votre appareil en mode paysage"
+  },
+  
+  levelPrompt: {
+    title: "Niveau",
+    timeLimit: "Limite de Temps",
+    description: "Continuez ! Vous vous débrouillez bien !",
+    scoreRange: "Plage de Score"
   }
 };
 

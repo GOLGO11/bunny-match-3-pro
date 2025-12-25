@@ -59,6 +59,29 @@ export default {
   
   buttons: {
     freeReward: "無料報酬"
+  },
+  
+  settings: {
+    music: "音楽",
+    musicOn: "音楽: オン",
+    musicOff: "音楽: オフ",
+    sound: "効果音",
+    soundOn: "効果音: オン",
+    soundOff: "効果音: オフ",
+    pause: "一時停止",
+    resume: "再開"
+  },
+  
+  landscape: {
+    title: "横向きに回転してください",
+    message: "最高のゲーム体験のために、デバイスを横向きモードに回転してください"
+  },
+  
+  levelPrompt: {
+    title: "レベル",
+    timeLimit: "制限時間",
+    description: "頑張って！素晴らしいです！",
+    scoreRange: "スコア範囲"
   }
 };
 

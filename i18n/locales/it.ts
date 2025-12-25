@@ -59,6 +59,29 @@ export default {
   
   buttons: {
     freeReward: "Ricompensa Gratuita"
+  },
+  
+  settings: {
+    music: "Musica",
+    musicOn: "Musica: Accesa",
+    musicOff: "Musica: Spenta",
+    sound: "Suono",
+    soundOn: "Suono: Acceso",
+    soundOff: "Suono: Spento",
+    pause: "Pausa",
+    resume: "Riprendi"
+  },
+  
+  landscape: {
+    title: "Ruota in Modalità Orizzontale",
+    message: "Per la migliore esperienza di gioco, ruota il dispositivo in modalità orizzontale"
+  },
+  
+  levelPrompt: {
+    title: "Livello",
+    timeLimit: "Limite di Tempo",
+    description: "Continua così! Stai andando alla grande!",
+    scoreRange: "Intervallo Punteggio"
   }
 };
 

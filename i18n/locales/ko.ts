@@ -59,6 +59,29 @@ export default {
   
   buttons: {
     freeReward: "무료 보상"
+  },
+  
+  settings: {
+    music: "음악",
+    musicOn: "음악: 켜기",
+    musicOff: "음악: 끄기",
+    sound: "효과음",
+    soundOn: "효과음: 켜기",
+    soundOff: "효과음: 끄기",
+    pause: "일시정지",
+    resume: "계속하기"
+  },
+  
+  landscape: {
+    title: "가로 모드로 회전하세요",
+    message: "최고의 게임 경험을 위해 기기를 가로 모드로 회전하세요"
+  },
+  
+  levelPrompt: {
+    title: "레벨",
+    timeLimit: "시간 제한",
+    description: "화이팅! 정말 잘하고 있어요!",
+    scoreRange: "점수 범위"
   }
 };
 

@@ -128,14 +128,9 @@ export class GameEngine {
     const dy = Math.abs(p1.y - p2.y);
     if (!((dx === 1 && dy === 0) || (dx === 0 && dy === 1))) return;
 
-    // 在交换开始时立即启动或重置计时器（所有难度）
-    // 这样用户一有动作就重置计时器
+    // 第一次交换时启动计时器
     if (!this.timerStarted) {
-      // 第一次交换，启动计时器
       this.startTimer();
-    } else {
-      // 后续交换，重置计时器
-      this.resetTimer();
     }
 
     try {
@@ -148,8 +143,13 @@ export class GameEngine {
       await this.sleep(250);
       const matches = this.findMatches();
       if (matches.length > 0) {
+        // 只有在形成匹配时才重置计时器
+        if (this.timerStarted) {
+          this.resetTimer();
+        }
         await this.handleSequencing(matches);
       } else {
+        // 如果没有形成匹配，撤销交换，不重置计时器
         this.grid[p1.y][p1.x] = g1; g1.gridX = p1.x; g1.gridY = p1.y;
         this.grid[p2.y][p2.x] = g2; g2.gridX = p2.x; g2.gridY = p2.y;
         await this.sleep(250);

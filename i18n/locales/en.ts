@@ -85,6 +85,14 @@ export default {
   landscape: {
     title: "Please Rotate to Landscape",
     message: "For the best gaming experience, please rotate your device to landscape mode"
+  },
+  
+  // 关卡提示
+  levelPrompt: {
+    title: "Level",
+    timeLimit: "Time Limit",
+    description: "Keep it up! You're doing great!",
+    scoreRange: "Score Range"
   }
 };
 

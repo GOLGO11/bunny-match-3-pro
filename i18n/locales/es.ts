@@ -59,6 +59,29 @@ export default {
   
   buttons: {
     freeReward: "Recompensa Gratis"
+  },
+  
+  settings: {
+    music: "Música",
+    musicOn: "Música: Encendida",
+    musicOff: "Música: Apagada",
+    sound: "Sonido",
+    soundOn: "Sonido: Encendido",
+    soundOff: "Sonido: Apagado",
+    pause: "Pausa",
+    resume: "Continuar"
+  },
+  
+  landscape: {
+    title: "Por Favor Rota a Modo Horizontal",
+    message: "Para la mejor experiencia de juego, por favor rota tu dispositivo a modo horizontal"
+  },
+  
+  levelPrompt: {
+    title: "Nivel",
+    timeLimit: "Límite de Tiempo",
+    description: "¡Sigue así! ¡Lo estás haciendo genial!",
+    scoreRange: "Rango de Puntuación"
   }
 };
 

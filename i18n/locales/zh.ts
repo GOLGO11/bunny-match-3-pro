@@ -75,6 +75,13 @@ export default {
   landscape: {
     title: "请横屏游戏",
     message: "为了获得最佳游戏体验，请将设备旋转至横屏模式"
+  },
+  
+  levelPrompt: {
+    title: "关卡",
+    timeLimit: "时间限制",
+    description: "加油！继续努力！",
+    scoreRange: "分数范围"
   }
 };
 

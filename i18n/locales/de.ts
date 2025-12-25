@@ -59,6 +59,29 @@ export default {
   
   buttons: {
     freeReward: "Kostenlose Belohnung"
+  },
+  
+  settings: {
+    music: "Musik",
+    musicOn: "Musik: Ein",
+    musicOff: "Musik: Aus",
+    sound: "Sound",
+    soundOn: "Sound: Ein",
+    soundOff: "Sound: Aus",
+    pause: "Pause",
+    resume: "Fortsetzen"
+  },
+  
+  landscape: {
+    title: "Bitte ins Querformat drehen",
+    message: "Für das beste Spielerlebnis bitte das Gerät ins Querformat drehen"
+  },
+  
+  levelPrompt: {
+    title: "Level",
+    timeLimit: "Zeitlimit",
+    description: "Weiter so! Du machst das großartig!",
+    scoreRange: "Punktbereich"
   }
 };
 

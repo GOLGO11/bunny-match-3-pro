@@ -23,10 +23,10 @@ export interface LevelConfig {
 }
 
 export const LEVEL_CONFIGS: LevelConfig[] = [
-  { level: 1, minScore: 0, maxScore: 300000, timeLimit: 25 },      // 第一关：0-30万分，25秒
-  { level: 2, minScore: 300000, maxScore: 600000, timeLimit: 15 },  // 第二关：30-60万分，15秒
-  { level: 3, minScore: 600000, maxScore: 900000, timeLimit: 8 },    // 第三关：60-90万分，8秒
-  { level: 4, minScore: 900000, maxScore: null, timeLimit: 5 },     // 第四关：90万分以上，5秒
+  { level: 1, minScore: 0, maxScore: 200000, timeLimit: 25 },      // 第一关：0-20万分，25秒
+  { level: 2, minScore: 200000, maxScore: 400000, timeLimit: 15 },  // 第二关：20-40万分，15秒
+  { level: 3, minScore: 400000, maxScore: 600000, timeLimit: 8 },    // 第三关：40-60万分，8秒
+  { level: 4, minScore: 600000, maxScore: null, timeLimit: 5 },     // 第四关：60万分以上，5秒
 ];
 
 // 根据分数获取当前关卡配置

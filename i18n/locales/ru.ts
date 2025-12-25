@@ -59,6 +59,29 @@ export default {
   
   buttons: {
     freeReward: "Бесплатная Награда"
+  },
+  
+  settings: {
+    music: "Музыка",
+    musicOn: "Музыка: Вкл",
+    musicOff: "Музыка: Выкл",
+    sound: "Звук",
+    soundOn: "Звук: Вкл",
+    soundOff: "Звук: Выкл",
+    pause: "Пауза",
+    resume: "Продолжить"
+  },
+  
+  landscape: {
+    title: "Пожалуйста, Поверните в Альбомный Режим",
+    message: "Для лучшего игрового опыта, пожалуйста, поверните устройство в альбомный режим"
+  },
+  
+  levelPrompt: {
+    title: "Уровень",
+    timeLimit: "Лимит Времени",
+    description: "Продолжайте! У вас отлично получается!",
+    scoreRange: "Диапазон Счета"
   }
 };
 

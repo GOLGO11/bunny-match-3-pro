@@ -4,6 +4,7 @@ import { GameBoard } from './components/GameBoard';
 import { UIOverlay } from './components/UIOverlay';
 import { SettingsPanel } from './components/SettingsPanel';
 import { LandscapePrompt } from './components/LandscapePrompt';
+import { LevelPrompt } from './components/LevelPrompt';
 import { AdsManager } from './services/AdsManager';
 import { AudioManager } from './services/AudioManager';
 import { Difficulty, LevelConfig, getLevelByScore } from './constants';
@@ -30,6 +31,7 @@ const App: React.FC = () => {
   }, []);
   const [isPaused, setIsPaused] = useState(false);
   const [currentLevel, setCurrentLevel] = useState(1); // 当前关卡编号
+  const [levelPromptConfig, setLevelPromptConfig] = useState<LevelConfig | null>(null); // 关卡提示配置
   const adsManager = useRef(new AdsManager());
   const audioManager = useRef(new AudioManager());
 
@@ -85,10 +87,13 @@ const App: React.FC = () => {
   }, []);
 
   const handleStart = useCallback(async (selectedDifficulty?: Difficulty) => {
+    const finalDifficulty = selectedDifficulty || difficulty;
     if (selectedDifficulty) {
       setDifficulty(selectedDifficulty);
     }
     setTimeRemaining(null);
+    setCurrentLevel(1); // 重置关卡
+    setLevelPromptConfig(null); // 清除之前的提示
     setGameState('loading');
     await adsManager.current.showLoadingAd();
     
@@ -129,7 +134,16 @@ const App: React.FC = () => {
     }
     
     setGameState('playing');
-  }, []);
+    
+    // 简单难度下，游戏开始时显示第一关提示
+    if (finalDifficulty === Difficulty.EASY) {
+      const firstLevelConfig = getLevelByScore(0);
+      // 延迟一点显示，确保游戏界面已渲染
+      setTimeout(() => {
+        setLevelPromptConfig(firstLevelConfig);
+      }, 500);
+    }
+  }, [difficulty]);
 
   const handleRestart = () => {
     setScore(0);
@@ -145,7 +159,16 @@ const App: React.FC = () => {
   const handleLevelChange = useCallback((oldLevel: number, newLevel: number, levelConfig: LevelConfig) => {
     setCurrentLevel(newLevel);
     console.log(`[Level] 关卡切换: ${oldLevel} -> ${newLevel}, 时间限制: ${levelConfig.timeLimit}秒`);
-    // 这里可以添加关卡切换提示（后续功能）
+    
+    // 只在简单难度下显示关卡提示
+    if (difficulty === Difficulty.EASY && oldLevel !== newLevel) {
+      setLevelPromptConfig(levelConfig);
+    }
+  }, [difficulty]);
+  
+  // 关闭关卡提示
+  const handleCloseLevelPrompt = useCallback(() => {
+    setLevelPromptConfig(null);
   }, []);
 
   const handleRequestReward = async () => {
@@ -242,6 +265,14 @@ const App: React.FC = () => {
 
       {/* 横屏提示（游戏进行中且移动端竖屏时显示） */}
       <LandscapePrompt gameState={gameState} />
+      
+      {/* 关卡提示（仅在简单难度下显示） */}
+      {gameState === 'playing' && difficulty === Difficulty.EASY && (
+        <LevelPrompt 
+          levelConfig={levelPromptConfig} 
+          onClose={handleCloseLevelPrompt}
+        />
+      )}
 
       {/* 开发模式：移动端测试无解法按钮（仅在移动端游戏进行中时显示） */}
       {gameState === 'playing' && isMobileDevice && (
