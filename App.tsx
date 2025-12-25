@@ -136,12 +136,15 @@ const App: React.FC = () => {
     setGameState('playing');
     
     // 简单难度下，游戏开始时显示第一关提示
+    // 使用 finalDifficulty 确保使用正确的难度值
     if (finalDifficulty === Difficulty.EASY) {
       const firstLevelConfig = getLevelByScore(0);
+      console.log(`[App] 游戏开始，准备显示第一关提示: 关卡 ${firstLevelConfig.level}, finalDifficulty=${finalDifficulty}`);
       // 延迟一点显示，确保游戏界面已渲染
       setTimeout(() => {
+        console.log(`[App] 设置第一关提示配置`);
         setLevelPromptConfig(firstLevelConfig);
-      }, 500);
+      }, 600); // 稍微延迟，确保游戏界面已完全渲染
     }
   }, [difficulty]);
 
@@ -158,11 +161,14 @@ const App: React.FC = () => {
   // 关卡切换回调
   const handleLevelChange = useCallback((oldLevel: number, newLevel: number, levelConfig: LevelConfig) => {
     setCurrentLevel(newLevel);
-    console.log(`[Level] 关卡切换: ${oldLevel} -> ${newLevel}, 时间限制: ${levelConfig.timeLimit}秒`);
+    console.log(`[Level] 关卡切换: ${oldLevel} -> ${newLevel}, 时间限制: ${levelConfig.timeLimit}秒, 当前难度: ${difficulty}`);
     
     // 只在简单难度下显示关卡提示
     if (difficulty === Difficulty.EASY && oldLevel !== newLevel) {
+      console.log(`[Level] 显示关卡提示: 关卡 ${newLevel}`);
       setLevelPromptConfig(levelConfig);
+    } else {
+      console.log(`[Level] 不显示关卡提示: difficulty=${difficulty}, oldLevel=${oldLevel}, newLevel=${newLevel}`);
     }
   }, [difficulty]);
   

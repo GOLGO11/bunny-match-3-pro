@@ -14,6 +14,7 @@ export const LevelPrompt: React.FC<LevelPromptProps> = ({ levelConfig, onClose }
 
   useEffect(() => {
     if (levelConfig) {
+      console.log(`[LevelPrompt] 显示关卡提示: 关卡 ${levelConfig.level}`);
       // 显示动画
       setIsVisible(true);
       
@@ -29,6 +30,8 @@ export const LevelPrompt: React.FC<LevelPromptProps> = ({ levelConfig, onClose }
       return () => {
         clearTimeout(timer);
       };
+    } else {
+      setIsVisible(false);
     }
   }, [levelConfig, onClose]);
 
@@ -36,7 +39,7 @@ export const LevelPrompt: React.FC<LevelPromptProps> = ({ levelConfig, onClose }
 
   return (
     <div 
-      className={`fixed inset-0 z-50 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${
+      className={`fixed inset-0 z-[110] flex items-center justify-center pointer-events-none transition-opacity duration-300 ${
         isVisible ? 'opacity-100' : 'opacity-0'
       }`}
     >
